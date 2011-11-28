@@ -68,8 +68,13 @@ public class Atom {
     }
   }
   
-  public void step() {
-    
+  public void step(ArrayList<Atom> atoms) {
+    for(Atom a : atoms) {
+      if(a == this)
+        continue;
+      
+      
+    }
   }
   
   public void react() {
@@ -119,10 +124,6 @@ public class Space {
     atoms.remove(idx);
   }
   
-  public ArrayList<Atom> getAtoms() {
-    return atoms;
-  }
-  
   public void clear() {
     atoms.clear();
     bonds.clear();
@@ -149,7 +150,7 @@ public class Space {
   
   public void simulate() {
     for(Atom a : atoms) {
-      a.step();
+      a.step(atoms);
     }
     for(Atom a : atoms) {
       a.react();
