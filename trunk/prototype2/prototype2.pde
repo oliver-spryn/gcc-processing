@@ -1,6 +1,62 @@
 import picking.*;
 import processing.opengl.*;
 
+//TODO: put all of this in a PApplet, or otherwise abstract it from a GUI perspective
+// when this happens, code should be moved out of `prototype2'
+
+
+Space space;
+Picker picker;
+Player[] players;
+int turn;
+
+int showMe = 0;
+
+void setup() {
+  size(1000, 600, P3D);
+  
+  picker = new Picker(this);
+  space = new Space(picker);
+  players = new Player[2];
+  //for now; make this user-customizable via GUI later
+  for(int i=0; i < players.length; ++i) {
+    players[i] = new TerminalPlayer();
+  }
+  turn = 0;
+  
+  space.buildBuckyball();
+}
+
+void draw() {
+  int idx = players[turn].getMove();
+  if(idx != -1) {
+    space.remove(idx);
+    turn = (turn + 1) % players.length;
+  }
+  
+  lights();
+  
+  translate(width / 2, height / 2);
+  
+  space.simulate();
+  space.draw();
+  
+  text(showMe, 15, 30, 0);
+}
+
+void mouseClicked() {
+  int id = picker.get(mouseX, mouseY);
+  
+  //FIXME: a time delay should be enforced in between turns
+  
+  if(id != -1 && players[turn] instanceof TerminalPlayer) {
+    TerminalPlayer t = (TerminalPlayer)players[turn];
+    t.setMove(id);
+  }
+}
+
+
+
 public class Bond {
   private Atom[] atoms = new Atom[2];
   
@@ -18,7 +74,7 @@ public class Bond {
     strokeWeight(5);
     PVector a = atoms[0].getPosition();
     PVector b = atoms[1].getPosition();
-    //TODO: make this a cylinder
+    //TODO: make this a cylinder (complicated, but contained)
     line(a.x, a.y, a.z, b.x, b.y, b.z);
   }
 }
@@ -52,6 +108,7 @@ public class Atom {
     return true;
   }
   public boolean unbondTo(Atom a) {
+    // there will be very few bonds per atom, so this will be efficient
     for(int i=0; i < bondedTo.size(); ++i) {
       if(bondedTo.get(i) == a) {
         bondedTo.remove(i);
@@ -83,7 +140,7 @@ public class Atom {
   
   public void draw() {
     pushMatrix();
-    translate(p.x, p.y, p.z);
+    translate(p.x, p.y, p.z - 600);
     noStroke();
     sphere(r);
     popMatrix();
@@ -103,9 +160,16 @@ public class Space {
   
   public void buildBuckyball() {
     //TODO: implement
+    final float R = 100;
     
+    for(PVector v : vertices) {
+      PVector w = v.get();
+      w.mult(R);
+      atoms.add(new Atom(this, 3, 0, w));
+    }
+    
+    /*
     //dummy code
-    float R = 100;
     float theta = 0;
     float dTheta = TWO_PI / 5;
     for(int i=0; i < 5; ++i) {
@@ -117,6 +181,7 @@ public class Space {
     for(int i=0; i < atoms.size(); ++i) {
       bond(atoms.get(i), atoms.get((i + 1) % atoms.size()));
     }
+    */
   }
   
   public void remove(int idx) {
@@ -213,54 +278,3 @@ public class NetworkPlayer implements Player {
   }
 }
 
-
-Space space;
-Picker picker;
-Player[] players;
-int turn;
-
-int showMe = -99999;
-
-void setup() {
-  size(1000, 600, P3D);
-  
-  picker = new Picker(this);
-  space = new Space(picker);
-  players = new Player[2];
-  //for now; make this user-customizable via GUI later
-  for(int i=0; i < players.length; ++i) {
-    players[i] = new TerminalPlayer();
-  }
-  turn = 0;
-  
-  space.buildBuckyball();
-}
-
-void draw() {
-  int idx = players[turn].getMove();
-  if(idx != -1) {
-    space.remove(idx);
-    turn = (turn + 1) % players.length;
-  }
-  
-  lights();
-  
-  translate(width / 2, height / 2);
-  
-  space.simulate();
-  space.draw();
-  
-  showMe = turn;
-  text(showMe, 15, 30, 0);
-}
-
-void mouseClicked() {
-  int id = picker.get(mouseX, mouseY);
-  
-  //FIXME: a time delay should be enforced in between turns
-  
-  if(id != -1 && players[turn] instanceof TerminalPlayer) {
-    TerminalPlayer t = (TerminalPlayer)players[turn];
-    t.setMove(id);
-  }
-}
