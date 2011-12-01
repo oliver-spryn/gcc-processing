@@ -2,7 +2,7 @@ import picking.*;
 import processing.opengl.*;
 
 //TODO: put all of this in a PApplet, or otherwise abstract it from a GUI perspective
-// when this happens, code should be moved out of `prototype2'
+// when this happens, code should be moved out of `prototype2' into its final location
 
 
 Space space;
@@ -10,7 +10,19 @@ Picker picker;
 Player[] players;
 int turn;
 
-int showMe = 0;
+//for debugging:
+/*
+int counter = 0;
+void push_matrix() {
+  ++counter;
+  println(counter);
+  pushMatrix();
+}
+void pop_matrix() {
+  --counter;
+  popMatrix();
+}
+*/
 
 void setup() {
   size(1000, 600, P3D);
@@ -36,12 +48,10 @@ void draw() {
   
   lights();
   
-  translate(width / 2, height / 2);
+  translate(width / 2, height / 2, -600);
   
   space.simulate();
   space.draw();
-  
-  text(showMe, 15, 30, 0);
 }
 
 void mouseClicked() {
@@ -140,7 +150,7 @@ public class Atom {
   
   public void draw() {
     pushMatrix();
-    translate(p.x, p.y, p.z - 600);
+    translate(p.x, p.y, p.z);
     noStroke();
     sphere(r);
     popMatrix();
@@ -159,29 +169,24 @@ public class Space {
   }
   
   public void buildBuckyball() {
-    //TODO: implement
+    //clear(); // ?
+    
     final float R = 100;
     
-    for(PVector v : vertices) {
+    for(PVector v : Buckyball.vertices) {
       PVector w = v.get();
       w.mult(R);
-      atoms.add(new Atom(this, 3, 0, w));
-    }
-    
-    /*
-    //dummy code
-    float theta = 0;
-    float dTheta = TWO_PI / 5;
-    for(int i=0; i < 5; ++i) {
-      atoms.add(new Atom(this, 2, 0, 
-          new PVector(R * cos(theta), R * sin(theta), 0)));
-      theta += dTheta;
+      atoms.add(new Atom(this, 3, 4, w));
     }
     
     for(int i=0; i < atoms.size(); ++i) {
-      bond(atoms.get(i), atoms.get((i + 1) % atoms.size()));
+      Atom a = atoms.get(i);
+      for(int j=0; j < Buckyball.bonds[i].length; ++j) {
+        int b = Buckyball.bonds[i][j];
+        if(b > i)
+          bond(a, atoms.get(b));
+      }
     }
-    */
   }
   
   public void remove(int idx) {
@@ -199,14 +204,14 @@ public class Space {
     b.bondTo(a);
     bonds.add(new Bond(a, b));
   }
-  //inefficient, but simple. This can be optimized if necessary
   public void unbond(Atom a, Atom b) {
     a.unbondTo(b);
     b.unbondTo(a);
     
-    for(int i=0; i < bonds.size(); ++i) {
-      Atom atoms[] = bonds.get(i).getParticipants();
-      if((atoms[0] == a && atoms[1] == b) || (atoms[0] == b && atoms[1] == a)) {
+    //inefficient, but simple. It can be optimized if necessary
+    for(int i=bonds.size()-1; i >= 0; --i) {
+      Atom participants[] = bonds.get(i).getParticipants();
+      if((participants[0] == a && participants[1] == b) || (participants[0] == b && participants[1] == a)) {
         bonds.remove(i);
         break;
       }
@@ -221,7 +226,7 @@ public class Space {
       a.react();
     }
     
-    //TODO: find geometric center and point camera at it
+    //TODO: find geometric center and point camera at it (via translate(), not camera())
     //TODO: also adjust zoom so that all atoms are on screen (?)
   }
   
