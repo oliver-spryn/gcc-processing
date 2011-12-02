@@ -95,12 +95,21 @@ public class Atom {
   private float r = 20;
   private Space space;
   
-  private ArrayList<Atom> bondedTo;
+  private class AtomBond {
+    public Atom atom;
+    public Bond bond;
+    
+    public AtomBond(Atom a, Bond b) {
+      atom = a;
+      bond = b;
+    }
+  }
+  private ArrayList<AtomBond> bondedTo;
   private int maxBonds;
   
   public Atom(Space space, int maxBonds, float strength, PVector position) {
     this.space = space;
-    this.bondedTo = new ArrayList<Atom>(maxBonds);
+    this.bondedTo = new ArrayList<AtomBond>(maxBonds);
     this.maxBonds = maxBonds;
     this.strength = strength;
     this.p = position;
@@ -110,17 +119,17 @@ public class Atom {
     return p;
   }
   
-  public boolean bondTo(Atom a) {
+  public boolean bondTo(Atom a, Bond b) {
     if(bondedTo.size() == maxBonds)
       return false;
     
-    bondedTo.add(a);
+    bondedTo.add(new AtomBond(a, b));
     return true;
   }
   public boolean unbondTo(Atom a) {
     // there will be very few bonds per atom, so this will be efficient
     for(int i=0; i < bondedTo.size(); ++i) {
-      if(bondedTo.get(i) == a) {
+      if(bondedTo.get(i).atom == a) {
         bondedTo.remove(i);
         return true;
       }
@@ -131,7 +140,7 @@ public class Atom {
   
   public void deactivate() {
     for(int i=bondedTo.size()-1; i >= 0; --i) {
-      space.unbond(this, bondedTo.get(i));
+      space.unbond(this, bondedTo.get(i).atom);
     }
   }
   
@@ -200,9 +209,10 @@ public class Space {
   }
   
   public void bond(Atom a, Atom b) {
-    a.bondTo(b);
-    b.bondTo(a);
-    bonds.add(new Bond(a, b));
+    Bond bond = new Bond(a, b);
+    bonds.add(bond);
+    a.bondTo(b, bond);
+    b.bondTo(a, bond);
   }
   public void unbond(Atom a, Atom b) {
     a.unbondTo(b);
