@@ -4,16 +4,15 @@ import edu.gcc.processing.exceptions.ExceptionBase;
 
 /**
  * A specific exception to be thrown inside of the Multicaster class, whenever
- * connection to a specific IP address and port fails and all possible error
- * resolution methods have been tried
- * 
+ * connection to a specific IP address and port fails due to a security issue
+ *
  * @category   Exceptions
  * @package    edu.gcc.processing.exceptions.multicaster
  * @access     public
  * @since      v0.1 Dev
  */
 
-public class MulticasterInitException extends ExceptionBase {
+public class MulticasterInitSecurityException extends ExceptionBase {
 /**
  * A constructor method which passes a message to the super constructor
  *
@@ -23,7 +22,7 @@ public class MulticasterInitException extends ExceptionBase {
  * @return     void
  * @since      v0.1 Dev
  */
-	public MulticasterInitException(String message, Exception e) {
+	public MulticasterInitSecurityException(String message, Exception e) {
 		super(message, e);
 	}
 }
