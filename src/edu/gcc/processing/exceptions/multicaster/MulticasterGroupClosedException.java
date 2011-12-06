@@ -4,26 +4,25 @@ import edu.gcc.processing.exceptions.ExceptionBase;
 
 /**
  * A specific exception to be thrown inside of the Multicaster class, whenever
- * connection to a specific IP address and port fails and all possible error
- * resolution methods have been tried
- * 
+ * an attempt to join a multicast group fails, since the group is already 
+ * closed
+ *
  * @category   Exceptions
  * @package    edu.gcc.processing.exceptions.multicaster
  * @access     public
  * @since      v0.1 Dev
  */
 
-public class MulticasterInitException extends ExceptionBase {
+public class MulticasterGroupClosedException extends ExceptionBase {
 /**
  * A constructor method which passes a message to the super constructor
  *
  * @param      String      message     The message to send to the console
- * @param      Exception   e           A reference to the thrown exception class
  * @access     public
  * @return     void
  * @since      v0.1 Dev
  */
-	public MulticasterInitException(String message, Exception e) {
-		super(message, e);
+	public MulticasterGroupClosedException(String message) {		
+		super(message, new Exception("System message not avaliable."));
 	}
 }

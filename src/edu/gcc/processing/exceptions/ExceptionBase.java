@@ -30,6 +30,6 @@ public class ExceptionBase extends Exception {
 		super(message);
 		
 	//Output the message to the console
-		new Message("[Custom error message] " + message + "\n[Java error message]   " + e.getMessage() + "\n-----------------------------------------------\n");
+		new Message("[Custom error message] " + message + "\n[Java error message]   " + e.getMessage() + "\n-----------------------------------------------");
 	}
 }
