@@ -5,17 +5,17 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.UnknownHostException;
-
-//import processing.core.*;
+import java.util.Timer;
 
 import edu.gcc.processing.develop.Message;
 import edu.gcc.processing.exceptions.multicaster.MulticasterGroupClosedException;
 import edu.gcc.processing.exceptions.multicaster.MulticasterInitException;
 import edu.gcc.processing.exceptions.multicaster.MulticasterInitIPException;
-import edu.gcc.processing.exceptions.multicaster.MulticasterInitIPFatalException;
 import edu.gcc.processing.exceptions.multicaster.MulticasterInitPortException;
 import edu.gcc.processing.exceptions.multicaster.MulticasterInitSecurityException;
 import edu.gcc.processing.exceptions.multicaster.MulticasterSendException;
+import edu.gcc.processing.exceptions.net.IPAddressNumericException;
+import edu.gcc.processing.exceptions.net.IPAddressSyntaxException;
 
 /**
  * Send a printed message to the console. For development use only.
@@ -26,10 +26,10 @@ import edu.gcc.processing.exceptions.multicaster.MulticasterSendException;
  * @since      v0.1 Dev
  */
 
-public class Multicaster{
-	public String[] IPList = {"224.0.0.0", "224.0.0.37", "224.0.0.159"};
-	public int[] port = {41793, 3376, 4201};
+public class Multicaster {
+	public int port = 5540;
 	
+	private String IPAddress;
 	private MulticastSocket msConn;
 	private InetAddress netAddr;
 	private int internalIPRef = 0;
@@ -38,111 +38,97 @@ public class Multicaster{
 	private boolean triedNewPort = false;
 	private boolean resetListRef = false;
 	
-	public Multicaster() {		
-		
+	public Multicaster(String IPAddress) {		
+		this.IPAddress = IPAddress;
 	}
 	
-	/*private void createDialog() {
-		super.stroke(255, 255, 255);
-		super.fill(0, 0, 0);
-		super.rect(-1, 30, super.width + 2, super.height - 60);
-		super.textAlign(super.CENTER);
-		super.fill(255, 255, 255);
-		super.text("Hi!", 0, 40, super.width, 40);
-		super.translate(50, 50);
-		super.ellipse(10, 50, 5, 5);
+	public void checkAddress(String address) throws IPAddressNumericException, IPAddressSyntaxException {
+	//Split the IP address by the period
+		String[] addressSplitter = address.split("[.]");
 		
-	}*/
+	//Check to see if this is a number		
+		try {
+			String IPNumbers = address.replace(".", "");
+			Long.parseLong(IPNumbers);
+		} catch (NumberFormatException e) {
+			throw new IPAddressNumericException("The IP address you entered is not numeric. The IP address must be in the format x.x.x.x.", e);
+		}
+		
+	//Check for x.x.x.x
+		if (!address.matches("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]).){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")) {
+			throw new IPAddressSyntaxException("The IP address you entered is not a valid LAN multicaster IP address. The IP address must be in the format x.x.x.x, and in the range 239.0.0.0 - 239.255.255.255.");
+		}
+		
+	//Check for 239.x.x.x
+		if (Integer.parseInt(addressSplitter[0]) != 239) {
+			throw new IPAddressSyntaxException("The IP address you entered is not a valid LAN multicaster IP address. The IP address must be in the format x.x.x.x, and in the range 239.0.0.0 - 239.255.255.255.");
+		}
+		
+	//Check for 239.0.x.x - 239.255.x.x
+		if (Integer.parseInt(addressSplitter[1]) < 0 && Integer.parseInt(addressSplitter[1]) > 255) {
+			throw new IPAddressSyntaxException("The IP address you entered is not a valid LAN multicaster IP address. The IP address must be in the format x.x.x.x, and in the range 239.0.0.0 - 239.255.255.255.");
+		}
+		
+	//Check for 239.0.0.x - 239.255.255.x
+		if (Integer.parseInt(addressSplitter[2]) < 0 && Integer.parseInt(addressSplitter[2]) > 255) {
+			throw new IPAddressSyntaxException("The IP address you entered is not a valid LAN multicaster IP address. The IP address must be in the format x.x.x.x, and in the range 239.0.0.0 - 239.255.255.255.");
+		}
+		
+	//Check for 239.0.0.0 - 239.255.255.255
+		if (Integer.parseInt(addressSplitter[3]) < 0 && Integer.parseInt(addressSplitter[3]) > 255) {
+			throw new IPAddressSyntaxException("The IP address you entered is not a valid LAN multicaster IP address. The IP address must be in the format x.x.x.x, and in the range 239.0.0.0 - 239.255.255.255.");
+		}
+	}
 	
-	private void joinGroup() throws MulticasterGroupClosedException {	
+	private void silentJoin() {
 		try {
 			this.msConn.joinGroup(this.netAddr);
-			
-			for (int i = 0; i <= 2; i ++) {
-				if (this.recieveData() == "Active") {
-					throw new MulticasterGroupClosedException("The group your are trying to join already has a game in progress. Try another group.");
-				}
-			}
 		} catch (IOException e) {
-			//This error shouldn't occur since it would caught by the setupCaller() method during initial connection to the host
+			//This error shouldn't occur since it would caught by the connect() method during initial connection to the host
 		}
 	}
 	
-/**
- * Create a connection to a multicast host and port, and resolve any
- * potential issues that don't require repeated attempts. These issues
- * are resolved by the connect() method firing this function over and
- * over.
- *
- * @access     private
- * @return     void
- * @throws     MulticasterInitIPException, MulticasterInitIPFatalException, MulticasterInitPortException, MulticasterInitSecurityException
- * @since      v0.1 Dev
- */
-	
-	private void setupCaller() throws MulticasterInitIPException, MulticasterInitIPFatalException, MulticasterInitPortException, MulticasterInitSecurityException {
-	//Try to create a multicast connection on the given IP address and port
+	public String recieveData() {
+		byte buf[] = new byte[1024];
+		DatagramPacket pack = new DatagramPacket(buf, buf.length);
+		
 		try {
-		//Create a multicast connection on a given port, throws UnknownHostException
-			this.msConn = new MulticastSocket(this.port[this.internalPortRef]);
-			
-		//If all goes well, then create a connection to a given IP address using the above port number, throws IOException and SecurityException
-			this.netAddr = InetAddress.getByName(this.IPList[this.internalIPRef]);
-			
-		//Try joining the group and see if it is still open for new members
-			try {
-				this.joinGroup();
-			} catch (MulticasterGroupClosedException e) {
-				
-			}
-	//Try to resolve an error when connecting to the IP address
-		} catch (UnknownHostException e) {
-		//If there are more IP addresses to choose from, then throw an exception for appropriate kind of help
-			if (this.IPList.length - 1 > this.internalIPRef) {
-				throw new MulticasterInitIPException("The IP address (" + this.internalIPRef + ") of the given host could not be determined. Try another IP address.", e);
-			} else {
-			//The connect() method is currently trying all available IP addresses and ports, don't handle this yourself
-				if (this.resetListRef == true) {
-					throw new MulticasterInitIPFatalException("The IP address (" + this.internalIPRef + ") of the given host could not be determined. The list of avaliable IP addresses have been exhausted.", e);
-				} else {
-					throw new MulticasterInitIPException("The IP address (" + this.internalIPRef + ") of the given host could not be determined. Try another IP address.", e);
-				}
-			}
-	//Try to resolve an error when binding to the specific port
+			this.msConn.receive(pack);
+			String out = new String(pack.getData());
+			return out.substring(0, pack.getLength());
 		} catch (IOException e) {
-		//If there are more ports to choose from, then throw an exception for appropriate kind of help
-			if (this.port.length - 1 > this.internalPortRef) {
-				throw new MulticasterInitPortException("A connection to the IP address (" + this.internalPortRef + ") was established, but the application could not bind to the given port. Try another port.", e);
-			} else {
-			//The connect() method is currently trying all available IP addresses and ports, don't handle this yourself
-				//if (this.resetListRef == true) {
-				//	throw new MulticasterInitPortFatalException("A connection to the IP address (" + this.internalPortRef + ") was established, but the application could not bind to the given port. The list of avaliable ports have been exhausted.", e);
-				//} else {
-					throw new MulticasterInitPortException("A connection to the IP address (" + this.internalPortRef + ") was established, but the application could not bind to the given port. Try another port.", e);
-				//}
+			return new String("");
+		}
+	}
+	
+	public void groupStatus() {
+	//Join the group silently, without broadcasting your presence, to check if the group is open
+		this.silentJoin();
+		
+	//Receive data for a given duration
+		for (int i = 0; i <= 2; i ++) {
+			String thing = this.recieveData();
+			new Message(this.recieveData());
+			if (this.recieveData() != "") {
+				new Message("gotcha");
+				return;
 			}
-	//Try to resolve a security violation
-		} catch (SecurityException e) {
-		//Try a different IP address and see if the problem still persists
-			if (this.triedNewIP = false) {
-				this.triedNewIP = true;
-				throw new MulticasterInitIPException("A security violation has taken place. Try another IP address and see if this is still the case.", e);
-		//Try a different port and see if the problem still persists
-			} else if (this.triedNewPort = false) {
-				this.triedNewPort = true;
-				throw new MulticasterInitPortException("A security violation has taken place. Try another port and see if this is still the case.", e);
-		//None of the above options worked, so throw a security violation exception
-			} else {
-				throw new MulticasterInitSecurityException("A security violation has taken place, and all possible solutions have been exhausted.", e);
-			}
+		}
+		
+		new Message("I've nothing interesting to say...");
+	}
+	
+	private void joinGroup() {	
+		try {
+			this.msConn.joinGroup(this.netAddr);
+		} catch (IOException e) {
+			//This error shouldn't occur since it would caught by the connect() method during initial connection to the host
 		}
 	}
 	
 /**
- * Create a connection to a multicast host and port, by firing the setupCaller().
- * This method attempts to resolve any connection issues by altering the
- * connection settings, and calling setupCaller() over and over until the issue
- * is resolved or deemed unresolvable.
+ * Create a connection to a multicast host and port, and alert the user
+ * of any potential issues.
  *
  * @access     public
  * @return     void
@@ -151,56 +137,36 @@ public class Multicaster{
  */
 	
 	public void connect() throws MulticasterInitException {
-	//Use a loop to run through all of the possible IP addresses and ports, should connecting to one or more of them fail
-		for (int i = 0; i <= this.IPList.length - 1; i ++) {
-		//Making a connection using the given IP address (this.internalIPRef) and port (this.internalPortRef)
+	//Try to create a multicast connection on the given IP address and port
+		try {
 			try {
-				this.setupCaller();
-				break;
-		//If a connection to a specific IP address fails, try another one
-			} catch (MulticasterInitIPException e) {
-				new Message("Now trying the next IP address in the list, " + this.IPList[this.internalIPRef + 1] + ".");
-				this.internalIPRef ++;
-		//No connections could be made, this is probably a networking issue
-			} catch (MulticasterInitIPFatalException e) {
-				throw new MulticasterInitException("The application could not connect to the desired host. Please check your network connection.", e);
-		//A connection to a host was made, but we could not bind to any port. Try all of the available hosts and ports until one works
-			} catch (MulticasterInitPortException e) {
-			//If this is the first run, reset the IP list and port list pointer back to 0
-				if (this.resetListRef = false) {
-					this.resetListRef = true;
-					this.internalIPRef = 0;
-					this.internalPortRef = 0;
-			//If this is not the first run, then iteration through both lists is a bit more detailed
-				} else {
-				//If we have run through all available ports...
-					if (this.port.length - 1 == this.internalPortRef) {
-					//... and more IP addresses are available
-						if (this.IPList.length - 1 != this.internalIPRef + 1) {
-							this.internalIPRef ++;
-					//... but more IP addresses are not available
-						} else {
-							throw new MulticasterInitException("The application could not connect to a port on any host. Please check your network connection.", e);
-						}
-						
-					//Reset the port list pointer
-						this.internalPortRef = 0;
-				//If we have not run though all available ports...
-					} else if (this.port.length - 1 > this.internalPortRef) {
-						this.internalPortRef ++;
-					}
-				}
+			//Create a multicast connection on a given port, throws UnknownHostException
+				this.msConn = new MulticastSocket(this.port);
 				
-			//Run through the testing cycle again
-				new Message("Now trying " + this.IPList[this.internalIPRef] + ":" + this.port[this.internalPortRef] + ".");
-			//} catch (MulticasterInitPortFatalException e) {
-			//	throw new MulticasterInitException("The application could not connect to the desired host. Please check your network connection.", e);
-			} catch (MulticasterInitSecurityException e) {
-				throw new MulticasterInitException("An unresolvable security violation has taken place. No further details are avaliable.", e);
+			//If all goes well, then create a connection to a given IP address using the above port number, throws IOException and SecurityException
+				this.netAddr = InetAddress.getByName(this.IPAddress);
+			
+			//Ensure that the group is empty before joining
+				
+		//Java cannot connect to the given host
+			} catch (UnknownHostException e) {
+				throw new MulticasterInitIPException("Java could not connect to the multicast host located at the IP address " + this.IPAddress + ". Please check your network connections or try another host within the range of 239.0.0.0 - 239.255.255.255.", e);
+		//Java could connect to the given host, but cannot connect to the bind to the specified port
+			} catch (IOException e) {
+				throw new MulticasterInitPortException("Java successfully connected to the muliticast host located at " + this.IPAddress + ", however, it could not bind to the server port " + this.port + ". This is most likely an issue with the host, and can be easily resolved by choosing an alternative port. For example, avoid using common ports such as ports 80, 443, 21, or 8080.", e);
+		//Report a security violatioin
+			} catch (SecurityException e) {
+				throw new MulticasterInitSecurityException("A security violation has taken place. Try a different port, or another host altogether.", e);
 			}
+	//A general catch block to catch all of the above thrown exceptions
+		} catch (Exception e) {
+			throw new MulticasterInitException(e.getMessage(), e);
 		}
 	}
+
 	
+
+	/*
 	public void sendData(String data) throws MulticasterSendException {
 		/*try {
 			InetAddress netAddr = InetAddress.getByName(this.IPList[0]);
@@ -213,22 +179,10 @@ public class Multicaster{
 			}
 		} catch (UnknownHostException e) {
 			//throw new MulticasterSendException("Unknown host exception thrown while joining a multicast group", e);
-		}*/
-	}
-	
-	public String recieveData() {
-		byte buf[] = new byte[1024];
-		DatagramPacket pack = new DatagramPacket(buf, buf.length);
-		
-		try {
-			this.msConn.receive(pack);
-			String out = new String(pack.getData());
-			return out.substring(0, pack.getLength());
-		} catch (IOException e) {
-			return new String();
 		}
-	}
+	}*/
 	
+	/*
 	public void close() {
 		try {
 			this.msConn.leaveGroup(InetAddress.getByName(this.IPList[0]));
@@ -237,5 +191,5 @@ public class Multicaster{
 		}
 			
 		this.msConn.close();
-	}
+	}*/
 }

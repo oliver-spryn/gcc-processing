@@ -18,12 +18,11 @@ public class MulticasterInitException extends ExceptionBase {
  * A constructor method which passes a message to the super constructor
  *
  * @param      String      message     The message to send to the console
- * @param      Exception   e           A reference to the thrown exception class
  * @access     public
  * @return     void
  * @since      v0.1 Dev
  */
 	public MulticasterInitException(String message, Exception e) {
-		super(message, e);
+		super(message, new Exception("System message not avaliable."));
 	}
 }

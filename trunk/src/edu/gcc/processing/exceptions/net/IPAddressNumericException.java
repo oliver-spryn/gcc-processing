@@ -1,19 +1,18 @@
-package edu.gcc.processing.exceptions.multicaster;
+package edu.gcc.processing.exceptions.net;
 
 import edu.gcc.processing.exceptions.ExceptionBase;
 
 /**
  * A specific exception to be thrown inside of the Multicaster class, whenever
- * connection to a specific IP address fails and nothing else can be done to
- * connect to the desired host
+ * the class is given an IP address that is not numeric (without the dots).
  *
  * @category   Exceptions
- * @package    edu.gcc.processing.exceptions.multicaster
+ * @package    edu.gcc.processing.exceptions.net
  * @access     public
  * @since      v0.1 Dev
  */
 
-public class MulticasterInitIPFatalException extends ExceptionBase {
+public class IPAddressNumericException extends ExceptionBase {
 /**
  * A constructor method which passes a message to the super constructor
  *
@@ -23,7 +22,7 @@ public class MulticasterInitIPFatalException extends ExceptionBase {
  * @return     void
  * @since      v0.1 Dev
  */
-	public MulticasterInitIPFatalException(String message, Exception e) {
+	public IPAddressNumericException(String message, Exception e) {		
 		super(message, e);
 	}
 }
