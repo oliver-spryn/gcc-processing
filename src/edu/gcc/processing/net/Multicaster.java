@@ -42,7 +42,7 @@ public class Multicaster {
 		this.IPAddress = IPAddress;
 	}
 	
-	public void checkAddress(String address) throws IPAddressNumericException, IPAddressSyntaxException {
+	private void checkAddress(String address) throws IPAddressNumericException, IPAddressSyntaxException {
 	//Split the IP address by the period
 		String[] addressSplitter = address.split("[.]");
 		
@@ -80,7 +80,7 @@ public class Multicaster {
 		}
 	}
 	
-	private void silentJoin() {
+	public void silentJoin() {
 		try {
 			this.msConn.joinGroup(this.netAddr);
 		} catch (IOException e) {
