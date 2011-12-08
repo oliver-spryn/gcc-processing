@@ -166,10 +166,10 @@ public class Multicaster {
 
 	
 
-	/*
+	
 	public void sendData(String data) throws MulticasterSendException {
-		/*try {
-			InetAddress netAddr = InetAddress.getByName(this.IPList[0]);
+		try {
+			InetAddress netAddr = InetAddress.getByName(this.IPAddress);
 			DatagramPacket packet = new DatagramPacket(data.getBytes(), data.getBytes().length, netAddr, this.port);
 			
 			try {
@@ -180,7 +180,7 @@ public class Multicaster {
 		} catch (UnknownHostException e) {
 			//throw new MulticasterSendException("Unknown host exception thrown while joining a multicast group", e);
 		}
-	}*/
+	}
 	
 	/*
 	public void close() {
