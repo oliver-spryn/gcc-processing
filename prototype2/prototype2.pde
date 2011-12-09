@@ -92,6 +92,7 @@ void draw() {
   float oldTheta = oldX2D * 8 / cameraR;
   float oldPhi = oldY2D * 8 / cameraR;
   
+  //XXX: can we do this with custom rotation matrices?
   rotateY(oldTheta);
   rotateX(oldPhi);
   PMatrix m;
@@ -114,6 +115,7 @@ void mouseClicked() {
   int id = picker.get(mouseX, mouseY);
   
   //FIXME: a time delay should be enforced in between turns
+  // better yet, wait until everything has stopped moving
   
   if(id != -1 && players[turn] instanceof TerminalPlayer) {
     TerminalPlayer t = (TerminalPlayer)players[turn];
@@ -143,7 +145,7 @@ public class Bond {
   public Bond(Atom a, Atom b) {
     atoms[0] = a;
     atoms[1] = b;
-    strength = 20;
+    strength = 0.1;
   }
   
   public Atom[] getParticipants() {
@@ -174,6 +176,7 @@ public class Atom {
   private float strength;
   private float r = 20;
   private Space space;
+  private boolean active;
   
   private class AtomBond {
     public Atom atom;
@@ -195,6 +198,7 @@ public class Atom {
     this.p = position;
     this.v = new PVector();
     this.a = new PVector();
+    this.active = true;
   }
   
   public int bondsNeeded() {
@@ -224,23 +228,28 @@ public class Atom {
     for(int i=bondedTo.size()-1; i >= 0; --i) {
       space.unbond(this, bondedTo.get(i).atom);
     }
+    active = false;
+  }
+  public boolean isActive() {
+    return active;
   }
   
   public void step(ArrayList<Atom> atoms) {
-    
-    for(AtomBond ab : bondedTo) {
-      if(ab.atom.v.mag() == 0)
-        continue;
+    //Try to equalize the length of each of its bonds by applying a velocity to itself
+    //Calculate geometric center of atoms it is bonded to and move in that direction
+    /*if(bondedTo.size() != 0) {
+      PVector c = new PVector();
+      for(AtomBond ab : bondedTo) {
+        c.add(ab.atom.p);
+      }
+      c.mult(1 / bondedTo.size());
       
-      PVector acc = this.p.get();
-      acc.sub(ab.atom.p);
-      float d2 = acc.x * acc.x + acc.y * acc.y + acc.z * acc.z;
-      acc.mult(ab.bond.getStrength());
+      c.sub(p);
       
-      ab.atom.a.add(acc);
-    }
-    
-    /*for(Atom a : atoms) {
+      a = c;
+    }*/
+    /*
+    for(Atom a : atoms) {
       if(a == this)
         continue;
       
@@ -250,8 +259,8 @@ public class Atom {
       acc.mult(strength / d2);
       
       a.a.add(acc);
-    }
-    
+    }*/
+    /*
     for(AtomBond ab : bondedTo) {
       PVector acc = this.p.get();
       acc.sub(ab.atom.p);
@@ -261,6 +270,30 @@ public class Atom {
       
       ab.atom.a.add(acc);
     }*/
+  }
+  
+  public void exertBonds() {
+    if(bondedTo.size() > 0) {
+      /*
+      PVector c = new PVector();
+      for(AtomBond ab : bondedTo) {
+        c.add(ab.atom.p);
+      }
+      
+      c.mult(strength / bondedTo.size());
+      c.sub(p);
+      
+      v = c;
+      */
+      
+      v.set(0,0,0);
+      for(AtomBond ab : bondedTo) {
+        PVector c = ab.atom.p.get();
+        c.sub(p);
+        c.mult(ab.bond.getStrength());
+        v.add(c);
+      }
+    }
   }
   
   public void react() {
@@ -287,11 +320,13 @@ public class Space {
   private ArrayList<Bond> bonds;
   private Picker picker;
   private boolean changed;
+  private ArrayList<Atom> needy;
   
   public Space(Picker picker) {
     this.picker = picker;
     atoms = new ArrayList<Atom>();
     bonds = new ArrayList<Bond>();
+    needy = new ArrayList<Atom>();
   }
   
   public void buildBuckyball() {
@@ -315,9 +350,9 @@ public class Space {
     }
   }
   
-  public void remove(int idx) {
-    atoms.get(idx).deactivate();
-    atoms.remove(idx);
+  public void remove(int id) {
+    atoms.get(id).deactivate();
+    atoms.remove(id);
     changed = true;
   }
   
@@ -327,13 +362,16 @@ public class Space {
   }
   
   public boolean bond(Atom a, Atom b) {
+    if(a == b)
+      throw new RuntimeException();
+    
     if(a.bondsNeeded() == 0 || b.bondsNeeded() == 0)
       return false;
     
     Bond bond = new Bond(a, b);
     
     for(Bond i : bonds) {
-      if(i.equals(bond))
+      if(bond.equals(i))
         return false;
     }
     
@@ -361,6 +399,9 @@ public class Space {
     for(Atom a : atoms) {
       a.step(atoms);
     }
+    for(Atom a : needy) {
+      a.exertBonds();
+    }
     for(Atom a : atoms) {
       a.react();
     }
@@ -370,26 +411,29 @@ public class Space {
       return;
     changed = false;
     
+    //needy will always be a short list, so the following operations will be efficient
+    for(int i=needy.size()-1; i >= 0; --i) {
+      if(!needy.get(i).isActive() || needy.get(i).bondsNeeded() == 0)
+        needy.remove(i);
+    }
+    
     //find all atoms that are missing bonds
-    ArrayList<Atom> needy = new ArrayList<Atom>();
     for(Atom a : atoms) {
       if(a.bondsNeeded() > 0) {
-        needy.add(a);
+        boolean shouldAdd = true;
+        for(Atom a2 : needy) {
+          if(a2 == a) {
+            shouldAdd = false;
+            break;
+          }
+        }
+        
+        if(shouldAdd)
+          needy.add(a);
       }
     }
     Collections.shuffle(needy);
-    /*Collections.sort(needy, new Comparator<Atom>() {
-      public int compare(Atom a, Atom b) {
-        if(a.bondsNeeded() < b.bondsNeeded())
-          return 1;
-        else if(a.bondsNeeded() == b.bondsNeeded())
-          return 0;
-        else
-          return -1;
-      }
-    });*/
     
-    //needy will be a short list, so the following operations will be efficient
     boolean bondingOccured = true;
     while(bondingOccured) {
       bondingOccured = false;
