@@ -9,6 +9,12 @@ Space space;
 Picker picker;
 Player[] players;
 int turn;
+int startX = 0, startY = 0;
+int x2D = 0, y2D = 0;
+int oldX2D = 0, oldY2D = 0;
+float cameraX, cameraY;
+float cameraR;
+int oldTime = 0, dt;
 
 //for debugging:
 /*
@@ -27,6 +33,11 @@ void pop_matrix() {
 void setup() {
   size(1000, 600, P3D);
   
+  cameraX = 0;
+  cameraY = 0;
+  //int cameraZ = round((height / 2.0) / tan(PI / 6.0));
+  cameraR = 1200; //sqrt(cameraX * cameraX + cameraY * cameraY + cameraZ * cameraZ);
+  
   picker = new Picker(this);
   space = new Space(picker);
   players = new Player[2];
@@ -40,18 +51,63 @@ void setup() {
 }
 
 void draw() {
+  dt = millis() - oldTime;
+  
   int idx = players[turn].getMove();
   if(idx != -1) {
     space.remove(idx);
     turn = (turn + 1) % players.length;
   }
   
+  //FIXME: put lights in constant position relative to the camera
   lights();
-  
   translate(width / 2, height / 2, -600);
+  
+  float theta = (oldX2D + x2D) * 8 / cameraR; //approximation to account for scaling that looks reasonable
+  float phi = (oldY2D + y2D) * 8 / cameraR;
+  
+  cameraX = cameraR * sin(theta);
+  cameraY = cameraR * sin(phi);
+  float cameraZ = cameraR * cos(theta) * cos(phi);
+  float tmp = cameraR * cameraR - cameraX * cameraX - cameraY * cameraY;
+  int sign = tmp < 0 ? -1 : 1;
+  //float cameraZ = sqrt(abs(tmp)) * sign;
+  //println("y: " + cameraY + " z: " + cameraZ);
+  if(cameraZ < 0) {
+    cameraY = -cameraY;
+    cameraZ = -cameraZ;
+  }
+  if(cameraX < 0) {
+    cameraY = -cameraY;
+    cameraX = -cameraX;
+  }
+  println(cameraZ);
+  camera(cameraX, cameraY, cameraZ, 0, 0, 0, 0, 1, 0);
+  //rotateX(rotX * PI / 180);
+  //rotateY(rotY * PI / 180);
+  
+  /*
+  float theta = x2D * 8 / cameraR; //approximation to account for scaling that looks reasonable
+  float phi = y2D * 8 / cameraR;
+  float oldTheta = oldX2D * 8 / cameraR;
+  float oldPhi = oldY2D * 8 / cameraR;
+  
+  rotateY(oldTheta);
+  rotateX(oldPhi);
+  PMatrix m;
+  pushMatrix();
+  resetMatrix();
+  rotateY(theta);
+  rotateX(phi);
+  m = getMatrix();
+  popMatrix();
+  applyMatrix(m);
+  */
   
   space.simulate();
   space.draw();
+  
+  oldTime = millis();
 }
 
 void mouseClicked() {
@@ -65,14 +121,29 @@ void mouseClicked() {
   }
 }
 
+void mousePressed() {
+  startX = mouseX;
+  startY = mouseY;
+  oldX2D += x2D;
+  oldY2D += y2D;
+  x2D = y2D = 0;
+}
+
+void mouseDragged() {
+  x2D = -(startX - mouseX);
+  y2D = startY - mouseY;
+}
+
 
 
 public class Bond {
   private Atom[] atoms = new Atom[2];
+  private float strength;
   
   public Bond(Atom a, Atom b) {
     atoms[0] = a;
     atoms[1] = b;
+    strength = 20;
   }
   
   public Atom[] getParticipants() {
@@ -82,15 +153,24 @@ public class Bond {
   public void draw() {
     stroke(255);
     strokeWeight(5);
-    PVector a = atoms[0].getPosition();
-    PVector b = atoms[1].getPosition();
+    PVector a = atoms[0].p;
+    PVector b = atoms[1].p;
     //TODO: make this a cylinder (complicated, but contained)
     line(a.x, a.y, a.z, b.x, b.y, b.z);
+  }
+  
+  public float getStrength() {
+    return strength;
+  }
+  
+  public boolean equals(Bond bond) {
+    return (atoms[0] == bond.atoms[0] && atoms[1] == bond.atoms[1]) || 
+        (atoms[0] == bond.atoms[1] && atoms[1] == bond.atoms[0]);
   }
 }
 
 public class Atom {
-  private PVector p, v, a;
+  public PVector p, v, a;
   private float strength;
   private float r = 20;
   private Space space;
@@ -113,10 +193,12 @@ public class Atom {
     this.maxBonds = maxBonds;
     this.strength = strength;
     this.p = position;
+    this.v = new PVector();
+    this.a = new PVector();
   }
   
-  public PVector getPosition() {
-    return p;
+  public int bondsNeeded() {
+    return maxBonds - bondedTo.size();
   }
   
   public boolean bondTo(Atom a, Bond b) {
@@ -145,16 +227,50 @@ public class Atom {
   }
   
   public void step(ArrayList<Atom> atoms) {
-    for(Atom a : atoms) {
+    
+    for(AtomBond ab : bondedTo) {
+      if(ab.atom.v.mag() == 0)
+        continue;
+      
+      PVector acc = this.p.get();
+      acc.sub(ab.atom.p);
+      float d2 = acc.x * acc.x + acc.y * acc.y + acc.z * acc.z;
+      acc.mult(ab.bond.getStrength());
+      
+      ab.atom.a.add(acc);
+    }
+    
+    /*for(Atom a : atoms) {
       if(a == this)
         continue;
       
+      PVector acc = a.p.get();
+      acc.sub(this.p);
+      float d2 = acc.x * acc.x + acc.y * acc.y + acc.z * acc.z;
+      acc.mult(strength / d2);
       
+      a.a.add(acc);
     }
+    
+    for(AtomBond ab : bondedTo) {
+      PVector acc = this.p.get();
+      acc.sub(ab.atom.p);
+      float d2 = acc.x * acc.x + acc.y * acc.y + acc.z * acc.z;
+      acc.normalize();
+      acc.mult(ab.bond.getStrength() / d2);
+      
+      ab.atom.a.add(acc);
+    }*/
   }
   
   public void react() {
+    PVector tmp = a.get();
+    tmp.mult(dt);
+    v.add(tmp);
     
+    tmp = v.get();
+    tmp.mult(dt);
+    p.add(v);
   }
   
   public void draw() {
@@ -170,6 +286,7 @@ public class Space {
   private ArrayList<Atom> atoms;
   private ArrayList<Bond> bonds;
   private Picker picker;
+  private boolean changed;
   
   public Space(Picker picker) {
     this.picker = picker;
@@ -185,7 +302,7 @@ public class Space {
     for(PVector v : Buckyball.vertices) {
       PVector w = v.get();
       w.mult(R);
-      atoms.add(new Atom(this, 3, 4, w));
+      atoms.add(new Atom(this, 3, 1, w));
     }
     
     for(int i=0; i < atoms.size(); ++i) {
@@ -201,6 +318,7 @@ public class Space {
   public void remove(int idx) {
     atoms.get(idx).deactivate();
     atoms.remove(idx);
+    changed = true;
   }
   
   public void clear() {
@@ -208,20 +326,31 @@ public class Space {
     bonds.clear();
   }
   
-  public void bond(Atom a, Atom b) {
+  public boolean bond(Atom a, Atom b) {
+    if(a.bondsNeeded() == 0 || b.bondsNeeded() == 0)
+      return false;
+    
     Bond bond = new Bond(a, b);
-    bonds.add(bond);
+    
+    for(Bond i : bonds) {
+      if(i.equals(bond))
+        return false;
+    }
+    
     a.bondTo(b, bond);
     b.bondTo(a, bond);
+    bonds.add(bond);
+    
+    return true;
   }
   public void unbond(Atom a, Atom b) {
     a.unbondTo(b);
     b.unbondTo(a);
     
     //inefficient, but simple. It can be optimized if necessary
+    Bond bond = new Bond(a, b);
     for(int i=bonds.size()-1; i >= 0; --i) {
-      Atom participants[] = bonds.get(i).getParticipants();
-      if((participants[0] == a && participants[1] == b) || (participants[0] == b && participants[1] == a)) {
+      if(bonds.get(i).equals(bond)) {
         bonds.remove(i);
         break;
       }
@@ -236,8 +365,66 @@ public class Space {
       a.react();
     }
     
-    //TODO: find geometric center and point camera at it (via translate(), not camera())
-    //TODO: also adjust zoom so that all atoms are on screen (?)
+    
+    if(!changed)
+      return;
+    changed = false;
+    
+    //find all atoms that are missing bonds
+    ArrayList<Atom> needy = new ArrayList<Atom>();
+    for(Atom a : atoms) {
+      if(a.bondsNeeded() > 0) {
+        needy.add(a);
+      }
+    }
+    Collections.shuffle(needy);
+    /*Collections.sort(needy, new Comparator<Atom>() {
+      public int compare(Atom a, Atom b) {
+        if(a.bondsNeeded() < b.bondsNeeded())
+          return 1;
+        else if(a.bondsNeeded() == b.bondsNeeded())
+          return 0;
+        else
+          return -1;
+      }
+    });*/
+    
+    //needy will be a short list, so the following operations will be efficient
+    boolean bondingOccured = true;
+    while(bondingOccured) {
+      bondingOccured = false;
+      for(int i=0; i < needy.size(); ++i) {
+        for(int j=0; j < needy.size(); ++j) {
+          if(i == j)
+            continue;
+          
+          if(bond(needy.get(i), needy.get(j))) {
+            bondingOccured = true;
+            /*PVector acc = needy.get(j).p.get();
+            acc.sub(needy.get(i).p);
+            acc.normalize();
+            acc.mult(.5);
+            needy.get(i).v.add(acc);
+            acc.mult(-1);
+            needy.get(j).v.add(acc);*/
+          }
+        }
+      }
+      
+      /*int biggest = 0;
+      int biggest2 = 1;
+      
+      Atom a = needy.get(biggest);
+      Atom b = needy.get(biggest2);
+      
+      if(bond(a, b))
+        openings -= 2;
+      
+      if(a.bondsNeeded() < needy.get((biggest + 1) % needy.size()).bondsNeeded())
+        biggest = (biggest + 1) % needy.size();
+      if(b.bondsNeeded() < needy.get((biggest2 + 1) % needy.size()).bondsNeeded())
+        biggest2 = (biggest2 + 1) % needy.size();*/
+    }
   }
   
   public void draw() {
