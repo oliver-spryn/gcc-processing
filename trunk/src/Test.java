@@ -7,10 +7,13 @@ import edu.gcc.processing.develop.*;
 import edu.gcc.processing.exceptions.multicaster.MulticasterInitException;
 import edu.gcc.processing.exceptions.net.IPAddressNumericException;
 import edu.gcc.processing.exceptions.net.IPAddressSyntaxException;
+import edu.gcc.processing.gui.TabAlerts;
 
 public class Test extends PApplet {
 	public void setup() {
-		Multicaster multicast = new Multicaster("239.255.255.255");
+		size(640, 480);
+	    
+		Multicaster multicast = new Multicaster(this, "239.255.255.255");
 		
 		try {
 			multicast.connect();
@@ -18,6 +21,6 @@ public class Test extends PApplet {
 			// TODO: handle exception
 		}
 		
-		multicast.groupStatus();
+		//multicast.createAlert("Hi");
 	}
 }
