@@ -1,5 +1,6 @@
 package edu.gcc.processing.exceptions.multicaster;
 
+import processing.core.PApplet;
 import edu.gcc.processing.exceptions.ExceptionBase;
 
 /**
@@ -18,11 +19,12 @@ public class MulticasterGroupClosedException extends ExceptionBase {
  * A constructor method which passes a message to the super constructor
  *
  * @param      String      message     The message to send to the console
+ * @param      PApplet     applet      A reference to the object which extends the PApplet class
  * @access     public
  * @return     void
  * @since      v0.1 Dev
  */
-	public MulticasterGroupClosedException(String message) {		
-		super(message, new Exception("System message not avaliable."));
+	public MulticasterGroupClosedException(String message, PApplet applet) {		
+		super(message, new Exception("System message not avaliable."), applet);
 	}
 }

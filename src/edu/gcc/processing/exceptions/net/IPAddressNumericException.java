@@ -1,5 +1,6 @@
 package edu.gcc.processing.exceptions.net;
 
+import processing.core.PApplet;
 import edu.gcc.processing.exceptions.ExceptionBase;
 
 /**
@@ -18,11 +19,12 @@ public class IPAddressNumericException extends ExceptionBase {
  *
  * @param      String      message     The message to send to the console
  * @param      Exception   e           A reference to the thrown exception class
+ * @param      PApplet     applet      A reference to the object which extends the PApplet class
  * @access     public
  * @return     void
  * @since      v0.1 Dev
  */
-	public IPAddressNumericException(String message, Exception e) {		
-		super(message, e);
+	public IPAddressNumericException(String message, Exception e, PApplet applet) {		
+		super(message, e, applet);
 	}
 }
