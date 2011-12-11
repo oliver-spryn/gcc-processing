@@ -1,4 +1,4 @@
-package gcc.edu.processing.events;
+package edu.gcc.processing.events;
 
 import java.util.EventObject;
 

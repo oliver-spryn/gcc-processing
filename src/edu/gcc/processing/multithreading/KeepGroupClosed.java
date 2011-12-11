@@ -2,11 +2,11 @@ package edu.gcc.processing.multithreading;
 
 import processing.core.PApplet;
 
+import edu.gcc.processing.events.PacketRecieved;
 import edu.gcc.processing.exceptions.multicaster.MulticasterInitException;
 import edu.gcc.processing.exceptions.multicaster.MulticasterSendException;
 import edu.gcc.processing.gui.TabAlerts;
 import edu.gcc.processing.net.Multicaster;
-import gcc.edu.processing.events.PacketRecieved;
 
 /**
  * Periodically broadcast short message indicating that the current

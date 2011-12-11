@@ -16,6 +16,7 @@ import java.util.Timer;
 import processing.core.*;
 
 import edu.gcc.processing.develop.Message;
+import edu.gcc.processing.events.IPacketRecievedListener;
 import edu.gcc.processing.exceptions.multicaster.MulticasterGroupClosedException;
 import edu.gcc.processing.exceptions.multicaster.MulticasterInitException;
 import edu.gcc.processing.exceptions.multicaster.MulticasterInitIPException;
@@ -26,7 +27,6 @@ import edu.gcc.processing.exceptions.net.IPAddressNumericException;
 import edu.gcc.processing.exceptions.net.IPAddressSyntaxException;
 import edu.gcc.processing.gui.TabAlerts;
 import edu.gcc.processing.multithreading.KeepGroupClosed;
-import gcc.edu.processing.events.IPacketRecievedListener;
 
 /**
  * Send a printed message to the console. For development use only.

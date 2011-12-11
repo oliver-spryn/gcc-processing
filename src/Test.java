@@ -21,6 +21,6 @@ public class Test extends PApplet {
 			// TODO: handle exception
 		}
 		
-		//multicast.createAlert("Hi");
+		multicast.closeAccess();
 	}
 }
