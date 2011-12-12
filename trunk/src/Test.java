@@ -14,7 +14,7 @@ public class Test extends PApplet {
 	public void setup() {
 		size(640, 480);
 	    
-		Multicaster multicast = new Multicaster(this, "239.0.0.12");
+		Multicaster multicast = new Multicaster(this, "FF05:0:0:0:0:0:0:2");
 				
 		try {
 			multicast.connect();
