@@ -6,8 +6,10 @@ import java.awt.geom.GeneralPath;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.EventObject;
@@ -163,17 +165,19 @@ public class Multicaster {
 		}
 	}
 	
-	public String recieveData() {
-		byte buf[] = new byte[10240];
+	public void recieveData() {
+		byte[] buf = new byte[10240];
 		DatagramPacket pack = new DatagramPacket(buf, buf.length);
 		
 		try {
 			//this.msConn.setSoTimeout(3000);
 			this.msConn.receive(pack);
-			String out = new String(pack.getData());
-			return out.substring(0, pack.getLength());
+			System.err.println("Received " + pack.getLength() +
+				    " bytes from " + pack.getAddress());
+			pack.setLength(buf.length); // must reset length field!
+
 		} catch (IOException e) {
-			return new String("");
+			//return new String("");
 		}
 	}
 	
@@ -182,7 +186,7 @@ public class Multicaster {
 		this.silentJoin();
 		
 	//Receive data for a given duration
-		String returnVal = this.recieveData();
+		String returnVal = "";
 		
 	//Leave the group silently, without broadcasting a left notification
 		this.silentLeave();
@@ -196,7 +200,7 @@ public class Multicaster {
 		closeAndGo.start();
 	}
 	
-	private void joinGroup() {	
+	public void joinGroup() {	
 		try {
 			this.msConn.joinGroup(this.netAddr);
 		} catch (IOException e) {
@@ -246,12 +250,17 @@ public class Multicaster {
 
 	
 	public void sendData(String data) throws MulticasterSendException {
-		DatagramPacket packet = new DatagramPacket(data.getBytes(), data.getBytes().length, this.netAddr, this.port);
-		
 		try {
-			this.msConn.send(packet);
-		} catch (IOException e) {
-			throw new MulticasterSendException("Input/output exception thrown while sending a data packet to the multicast group", e, this.PAppletRef);
+			DatagramSocket socket = new DatagramSocket();
+			DatagramPacket packet = new DatagramPacket(data.getBytes(), data.getBytes().length, this.netAddr, this.port);
+			
+			try {
+				socket.send(packet);
+			} catch (IOException e) {
+				throw new MulticasterSendException("Java could not communicate with the server. Please check your network connections.", e, this.PAppletRef);
+			}
+		} catch (SocketException e) {
+			
 		}
 	}
 	
