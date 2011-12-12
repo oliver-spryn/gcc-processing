@@ -164,7 +164,7 @@ public class Multicaster {
 	}
 	
 	public String recieveData() {
-		byte buf[] = new byte[1000];
+		byte[] buf = new byte[1000];
 		DatagramPacket pack = new DatagramPacket(buf, buf.length);
 		
 		try {
@@ -221,6 +221,7 @@ public class Multicaster {
 			try {
 			//Create a multicast connection on a given port, throws UnknownHostException
 				this.msConn = new MulticastSocket(this.port);
+				this.msConn.setTimeToLive(200);
 				
 			//If all goes well, then create a connection to a given IP address using the above port number, throws IOException and SecurityException
 				this.netAddr = InetAddress.getByName(this.IPAddress);
