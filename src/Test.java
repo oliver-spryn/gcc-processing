@@ -24,7 +24,9 @@ public class Test extends PApplet {
 		multicast.joinGroup();
 		
 		try {
+			for(int i = 0; i <= 50; i++) {
 			multicast.sendData("Hi");
+			}
 		} catch (MulticasterSendException e) {
 			
 		}
