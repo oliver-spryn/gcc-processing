@@ -164,12 +164,13 @@ public class Multicaster {
 	}
 	
 	public String recieveData() {
-		byte buf[] = new byte[10240];
+		byte buf[] = new byte[1000];
 		DatagramPacket pack = new DatagramPacket(buf, buf.length);
 		
 		try {
 			//this.msConn.setSoTimeout(3000);
 			this.msConn.receive(pack);
+			new Message(pack);
 			String out = new String(pack.getData());
 			return out.substring(0, pack.getLength());
 		} catch (IOException e) {
@@ -246,7 +247,7 @@ public class Multicaster {
 
 	
 	public void sendData(String data) throws MulticasterSendException {
-		DatagramPacket packet = new DatagramPacket(data.getBytes(), data.getBytes().length, this.netAddr, this.port);
+		DatagramPacket packet = new DatagramPacket(data.getBytes(), data.length(), this.netAddr, this.port);
 		
 		try {
 			this.msConn.send(packet);
