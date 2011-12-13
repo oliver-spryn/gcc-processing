@@ -36,7 +36,7 @@ void setup() {
   cameraX = 0;
   cameraY = 0;
   //int cameraZ = round((height / 2.0) / tan(PI / 6.0));
-  cameraR = 1200; //sqrt(cameraX * cameraX + cameraY * cameraY + cameraZ * cameraZ);
+  cameraR = 800; //sqrt(cameraX * cameraX + cameraY * cameraY + cameraZ * cameraZ);
   
   picker = new Picker(this);
   space = new Space(picker);
@@ -61,7 +61,7 @@ void draw() {
   
   //FIXME: put lights in constant position relative to the camera
   lights();
-  translate(width / 2, height / 2, -600);
+  translate(width / 2, height / 2, 0);
   
   float theta = (oldX2D + x2D) * 8 / cameraR; //approximation to account for scaling that looks reasonable
   float phi = (oldY2D + y2D) * 8 / cameraR;
@@ -81,7 +81,7 @@ void draw() {
     cameraY = -cameraY;
     cameraX = -cameraX;
   }
-  println(cameraZ);
+  //println(cameraZ);
   camera(cameraX, cameraY, cameraZ, 0, 0, 0, 0, 1, 0);
   //rotateX(rotX * PI / 180);
   //rotateY(rotY * PI / 180);
@@ -108,10 +108,18 @@ void draw() {
   space.simulate();
   space.draw();
   
+  if(space.gameOver()) {
+    println("game over");
+    //do something
+  }
+  
   oldTime = millis();
 }
 
 void mouseClicked() {
+  if(!space.ready())
+    return;
+  
   int id = picker.get(mouseX, mouseY);
   
   //FIXME: a time delay should be enforced in between turns
@@ -177,6 +185,7 @@ public class Atom {
   private float r = 20;
   private Space space;
   private boolean active;
+  private boolean collide = false;
   
   private class AtomBond {
     public Atom atom;
@@ -203,6 +212,14 @@ public class Atom {
   
   public int bondsNeeded() {
     return maxBonds - bondedTo.size();
+  }
+  
+  public float getRadius() {
+    return r;
+  }
+  
+  public void collided() {
+    collide = true;
   }
   
   public boolean bondTo(Atom a, Bond b) {
@@ -296,20 +313,33 @@ public class Atom {
     }
   }
   
-  public void react() {
+  public boolean react() {
     PVector tmp = a.get();
     tmp.mult(dt);
     v.add(tmp);
     
-    tmp = v.get();
-    tmp.mult(dt);
-    p.add(v);
+    if(v.mag() > .1) {
+      tmp = v.get();
+      tmp.mult(dt);
+      p.add(v);
+      
+      return true;
+    } else {
+      v.set(0,0,0);
+      
+      return false;
+    }
   }
   
   public void draw() {
     pushMatrix();
     translate(p.x, p.y, p.z);
     noStroke();
+    if(collide) {
+      fill(255, 90, 30);
+    } else {
+      fill(255, 255, 255);
+    }
     sphere(r);
     popMatrix();
   }
@@ -322,6 +352,9 @@ public class Space {
   private boolean changed;
   private ArrayList<Atom> needy;
   
+  private boolean doneMoving = true;
+  private boolean endCondition = false;
+  
   public Space(Picker picker) {
     this.picker = picker;
     atoms = new ArrayList<Atom>();
@@ -329,10 +362,18 @@ public class Space {
     needy = new ArrayList<Atom>();
   }
   
+  public boolean ready() {
+    return doneMoving;
+  }
+  
+  public boolean gameOver() {
+    return endCondition;
+  }
+  
   public void buildBuckyball() {
     //clear(); // ?
     
-    final float R = 100;
+    final float R = 60;
     
     for(PVector v : Buckyball.vertices) {
       PVector w = v.get();
@@ -396,14 +437,33 @@ public class Space {
   }
   
   public void simulate() {
-    for(Atom a : atoms) {
+    /*for(Atom a : atoms) {
       a.step(atoms);
-    }
+    }*/
     for(Atom a : needy) {
       a.exertBonds();
     }
+    doneMoving = true;
     for(Atom a : atoms) {
-      a.react();
+      if(a.react())
+        doneMoving = false;
+    }
+    
+    
+    if(!doneMoving) {
+      //if two atoms collide, game over
+      for(Atom a : atoms) {
+        for(Atom b : needy) {
+          if(a == b)
+            continue;
+          
+          if(a.p.dist(b.p) <= a.getRadius() + b.getRadius()) {
+            endCondition = true;
+            a.collided();
+            b.collided();
+          }
+        }
+      }
     }
     
     
