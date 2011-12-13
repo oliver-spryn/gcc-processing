@@ -5,7 +5,8 @@ import edu.gcc.processing.exceptions.ExceptionBase;
 
 /**
  * A specific exception to be thrown inside of the Multicaster class, whenever
- * joining a specific multicasting group fails
+ * executing a command on a group fails, because the user has not yet joined a
+ * group
  *
  * @category   Exceptions
  * @package    edu.gcc.processing.exceptions.multicaster
@@ -13,7 +14,7 @@ import edu.gcc.processing.exceptions.ExceptionBase;
  * @since      v0.1 Dev
  */
 
-public class MulticasterJoinException extends ExceptionBase {
+public class MulticasterNotJoinedException extends ExceptionBase {
 /**
  * A constructor method which passes a message to the super constructor
  *
@@ -23,7 +24,7 @@ public class MulticasterJoinException extends ExceptionBase {
  * @return     void
  * @since      v0.1 Dev
  */
-	public MulticasterJoinException(String message, PApplet applet) {
+	public MulticasterNotJoinedException(String message, PApplet applet) {
 		super(message, new Exception("System message not avaliable."), applet);
 	}
 }
