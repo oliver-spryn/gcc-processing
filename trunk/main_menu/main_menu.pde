@@ -1,6 +1,15 @@
 class Main_Menu
 {
+  private boolean playing;
+  Main_Menu()
+  {
+    playing = false;
+  }
   
+  void setPlaying(boolean playing_) 
+  {
+    playing = playing_;
+  }
   
   
   class Button
@@ -30,13 +39,15 @@ class img
      image(img, x, y);
    }
 }
- 
+  
 void setup()
 {
   size(1000,600);
   background(#00B9C6);
+  
+  
 }
-
+  
 void draw()
 {
   float w = 100.0, h = 50.0, port1_x = 1.0, port1_y = 1.0, port2_x = 1.0, port2_y = 1.0, port3_x = 1.0,
@@ -50,25 +61,59 @@ void draw()
   Button Hotseat = new Button("Hotseat.png","Hotseat_roll.png","Hotseat_click.png", 100.0, 100.0);
   Button quit = new Button("Quit.png", "Quit_roll.png", "Quit_click.png", 850.0, 500.0);
 
-  if(mousePressed && mouseX>quit_x && mouseX <quit_x+w && mouseY>quit_y && mouseY <quit_y+h)
+  if(!playing && mousePressed && mouseX>quit_x && mouseX <quit_x+w && mouseY>quit_y && mouseY <quit_y+h) 
+  {
     exit();
+  }
     
-  if(mousePressed && mouseX>port1_x && mouseX <port1_x+w && mouseY>port1_y && mouseY <port1_y+h)
+  if(!playing && mousePressed && mouseX>port1_x && mouseX <port1_x+w && mouseY>port1_y && mouseY <port1_y+h)
+  {
   
+    
+  }
   
-  if(mousePressed && mouseX>port2_x && mouseX <port2_x+w && mouseY>port2_y && mouseY <port2_y+h)
+  if(!playing && mousePressed && mouseX>port2_x && mouseX <port2_x+w && mouseY>port2_y && mouseY <port2_y+h)
+  {
+    
+    
+  }
   
+  if(!playing && mousePressed && mouseX>port3_x && mouseX <port3_x+w && mouseY>port3_y && mouseY <port3_y+h)
+  {
+    
+    
+    
+  }
   
-  if(mousePressed && mouseX>port3_x && mouseX <port3_x+w && mouseY>port3_y && mouseY <port3_y+h)
+  if(!playing && mousePressed && mouseX>port4_x && mouseX <port4_x+w && mouseY>port4_y && mouseY <port4_y+h)
+  {
+    
+    
+  }
   
+  if(!playing && mousePressed && mouseX>port5_x && mouseX <port5_x+w && mouseY>port5_y && mouseY <port5_y+h)
+  {
   
-  if(mousePressed && mouseX>port4_x && mouseX <port4_x+w && mouseY>port4_y && mouseY <port4_y+h)
-  
-  
-  if(mousePressed && mouseX>port5_x && mouseX <port5_x+w && mouseY>port5_y && mouseY <port5_y+h)
- {}
+  }
+}
+
 }
 
 
 
+Main_Menu a;
+
+void setup()
+{
+  size(1000,600);
+  background(#00B9C6);
+  a = new Main_Menu();
+  a.setup();
 }
+
+void draw() {
+  a.draw();
+}
+
+
+
