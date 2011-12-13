@@ -1,35 +1,45 @@
 package edu.gcc.processing.multithreading;
 
+import java.awt.List;
 import java.util.ArrayList;
-
-import javax.swing.event.EventListenerList;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.Vector;
 
 import processing.core.PApplet;
+import edu.gcc.processing.develop.Message;
 import edu.gcc.processing.events.IPacketRecievedListener;
+import edu.gcc.processing.events.PacketRecieved;
+import edu.gcc.processing.exceptions.multicaster.MulticasterJoinException;
+import edu.gcc.processing.exceptions.multicaster.MulticasterJoinedPreviouslyException;
 import edu.gcc.processing.exceptions.multicaster.MulticasterNotJoinedException;
 import edu.gcc.processing.net.Multicaster;
 
 public class IterateReception extends Multicaster implements Runnable {
 	private boolean continueLoop = true;
-	private EventListenerList listeners;
+	private transient Vector listeners = new Vector();
 
-	public IterateReception(PApplet applet) {
+	public IterateReception(PApplet applet, String room, String uniqueID, String host, String processorURL, int groupMax) {
 		super(applet);
-		
-		this.listeners = new EventListenerList();
+		super.room = room;
+		super.uniqueID = uniqueID;
+		super.instantiate = false;
+		super.host = host;
+		super.processorURL = processorURL;
+		super.groupMax = groupMax;
+		super.lastPacket = new ArrayList();
 	}
 	
 	public void addEventListener(IPacketRecievedListener listener) {
-		listeners.add(IPacketRecievedListener.class, listener);
+		this.listeners.addElement(listener);
 	}
 	
 	public void removeEventListener(IPacketRecievedListener listener) {
-		listeners.remove(IPacketRecievedListener.class, listener);
+		this.listeners.removeElement(listener);
 	}
 
 	public void run() {
-		ArrayList packetData;
-		Object[] listenerList = listeners.getListenerList();
+		ArrayList packetData = new ArrayList();
 		
 		while(this.continueLoop) {
 		//Can we wait a bit, or have we been interrupted?
@@ -45,12 +55,39 @@ public class IterateReception extends Multicaster implements Runnable {
 			try {
 				packetData = super.recieve();
 				
-				if (!packetData.get(0).equals(super.lastPacket.get(0)) && !packetData.get(1).equals(super.lastPacket.get(1))) {
+				if (super.lastPacket.isEmpty()) {
 					super.lastPacket = packetData;
+				}
+				
+				if (this.listeners != null && !this.listeners.isEmpty()) {
+					PacketRecieved event = new PacketRecieved(this);
 					
-					for (int i = 0; i < listenerList.length; i = i + 2 ) {
-						if (listenerList[i] == IPacketRecievedListener.class) {
-							((IPacketRecievedListener) listenersList[i + 1]).packetRecieved();
+					Vector targets;
+					synchronized (this) {
+						targets = (Vector) listeners.clone();
+					}
+					
+					Enumeration e = targets.elements();
+					
+					while(e.hasMoreElements()) {
+						IPacketRecievedListener l = (IPacketRecievedListener) e.nextElement();
+						
+						if (packetData.get(0) != null && packetData.get(1) != null && !packetData.get(0).equals(super.lastPacket.get(0)) && !packetData.get(1).equals(super.lastPacket.get(1))) {
+							super.lastPacket = packetData;
+							
+							l.packetRecieved(event, super.lastPacket);
+							
+							if (packetData.get(1).equals("User created")) {
+								l.userJoined(event, super.lastPacket);
+							}
+							
+							if (packetData.get(1).equals("User terminated")) {
+								l.userLeft(event, super.lastPacket);
+							}
+							
+							if (packetData.get(1).equals("Room closed")) {
+								l.roomClosed(event, super.lastPacket);
+							}
 						}
 					}
 				}
@@ -59,5 +96,4 @@ public class IterateReception extends Multicaster implements Runnable {
 			}
 		}
 	}
-
 }

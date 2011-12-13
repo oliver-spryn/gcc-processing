@@ -17,10 +17,14 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONValue;
 
 import edu.gcc.processing.develop.Message;
+import edu.gcc.processing.events.IPacketRecievedListener;
+import edu.gcc.processing.events.PacketRecieved;
+import edu.gcc.processing.events.PacketRecievedHandler;
 import edu.gcc.processing.exceptions.multicaster.MulticasterJoinException;
 import edu.gcc.processing.exceptions.multicaster.MulticasterJoinedPreviouslyException;
 import edu.gcc.processing.exceptions.multicaster.MulticasterNotJoinedException;
 import edu.gcc.processing.gui.TabAlerts;
+import edu.gcc.processing.multithreading.IterateReception;
 
 import processing.core.*;
 
@@ -48,7 +52,7 @@ public class Multicaster {
  * @access     public
  * @var        String
  */
-	public String host = "localhost";
+	public String host = "204.93.159.80";
 	
 /**
  * The path to the script which will process the pseudo-multicasting
@@ -57,7 +61,7 @@ public class Multicaster {
  * @access     public
  * @var        String
  */
-	public String processorURL = "multicaster.php";
+	public String processorURL = "~pavcsbel/comp155/multicaster.php";
 	
 /**
  * Whether or not Java's network connections will go over a proxy
@@ -92,6 +96,14 @@ public class Multicaster {
 	public int groupMax = 2;
 	
 /**
+ * A reference to the receiver class which will dispatch events
+ *
+ * @access     public
+ * @var        IterateReception
+ */
+	public IterateReception reciever;
+	
+/**
  * A reference to the object which extends the PApplet class
  *
  * @access     protected
@@ -100,7 +112,7 @@ public class Multicaster {
 	protected PApplet PAppletRef;
 	
 /**
- * A container for the last data packet that was recieved
+ * A container for the last data packet that was received
  *
  * @access     protected
  * @var        ArrayList
@@ -108,21 +120,40 @@ public class Multicaster {
 	protected ArrayList lastPacket;
 	
 /**
+ * If this class was instantiated via the sub-class IterateReception,
+ * then we don't want to go in a loop of endless self-instantiation
+ * (see the joinRoom() method). Set whether or not the IterateReception
+ * method should be called, or has it been called already?
+ *
+ * @access     protected
+ * @var        boolean
+ */
+	protected boolean instantiate = true;
+	
+/**
  * The unique ID of this user
  *
- * @access     private
- * @var        double
+ * @access     protected
+ * @var        string
  */
-	private double uniqueID;
+	protected String uniqueID;
 	
 /**
  * The name of the room which the user has currently joined
  *
- * @access     private
+ * @access     protected
  * @var        String
  */
-	private String room = null;
+	protected String room = null;
 	
+/**
+ * A reference to the multithreading class
+ *
+ * @access     private
+ * @var        Thread
+ */
+	private Thread thread;
+
 /**
  * The constructor method, which is responsible for assigning the
  * constructor parameters to protected instance variables for global
@@ -137,7 +168,7 @@ public class Multicaster {
 	
 	public Multicaster(PApplet applet) {
 		this.PAppletRef = applet;
-		this.uniqueID = Math.round(Math.random() * 10000);
+		this.uniqueID = System.getProperty("user.name");
 	}
 	
 /**
@@ -281,6 +312,13 @@ public class Multicaster {
 			if (!"success".equals(statusCheck)) {
 				throw new MulticasterJoinException(statusCheck, this.PAppletRef);
 			}
+			
+		//Start the receiving cycle
+			if (this.instantiate) {
+				this.reciever = new IterateReception(this.PAppletRef, this.room, this.uniqueID, this.host, this.processorURL, this.groupMax);
+				this.thread = new Thread(this.reciever);
+				this.thread.start();
+			}
 	//If the user has joined a previous room...
 		} else {
 			throw new MulticasterJoinedPreviouslyException("You have already joined a room. You cannot join a second one.", this.PAppletRef);
@@ -329,6 +367,9 @@ public class Multicaster {
 		
 		//Leave the room
 			this.transmit("room", "leave", room + ";" + this.uniqueID);
+			
+		//Turn off the receiver
+			this.thread.interrupt();
 	//If the user has not joined a room...
 		} else {
 			throw new MulticasterNotJoinedException("You have not yet joined a room. Please join a room.", this.PAppletRef);
@@ -352,6 +393,9 @@ public class Multicaster {
 		
 		//Leave the room
 			this.transmit("room", "close", room + ";" + this.uniqueID);
+			
+		//Turn off the receiver
+			this.thread.interrupt();
 	//If the user has not joined a room...
 		} else {
 			throw new MulticasterNotJoinedException("You have not yet joined a room. Please join a room.", this.PAppletRef);
@@ -406,11 +450,11 @@ public class Multicaster {
  * Get the unique ID of the user
  *
  * @access     public
- * @return     double
+ * @return     String
  * @since      v0.1 Dev
  */
 	
-	public double uniqueID() {
+	public String uniqueID() {
 		return this.uniqueID;
 	}
 	
