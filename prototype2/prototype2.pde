@@ -172,7 +172,7 @@ public class Game {
     space.draw();
     
     oldTime = millis();
-      
+    
     return true;
   }
   
