@@ -72,6 +72,7 @@ public class Game {
           otherPlayerIdx = 0;
         }
         mc.joinRoom(room);
+        println("joinRoom()");
         mc.reciever.addEventListener(new PacketRecievedHandler() {
           public void userLeft() {
             println("userLeft()");
