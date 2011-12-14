@@ -28,8 +28,8 @@ void setup() {
 }
 
 Multicaster mc = new Multicaster(this);
-String waitOnRoom = null;
-boolean needsWait = false;
+boolean isSetup = false;
+boolean isReady = false;
 
 void draw() {
   if(willClose) {
@@ -38,15 +38,21 @@ void draw() {
   }
   
   if(playing) {
-    playing = g.draw();
-    
-    if(needsWait && waitOnRoom != null) {
-      while(mc.roomTotal(waitOnRoom) != 2) {
-        try { Thread.sleep(500); } catch(InterruptedException e) {}
+    if(!isSetup) {
+      if(!isReady) {
+        g = new Game(this, gis.hotseat, gis.room);
+        g.setup();
+        isReady = true;
       }
-      waitOnRoom = null;
+      
+      if(mc.roomTotal(gis.room) != 2) {
+        try { Thread.sleep(200); } catch(InterruptedException ex) {}
+        return;
+      }
+      isSetup = true;
     }
-    needsWait = true;
+    
+    playing = g.draw();
     
     if(!playing) {
       TabAlerts tab = new TabAlerts(this);
@@ -56,19 +62,13 @@ void draw() {
       willClose = true;
       
       g = null;
-      needsWait = false;
+      isSetup = isReady = false;
       m.setPlaying(playing);
     }
   } else {
     gis = m.draw();
     if(gis != null) {
       playing = gis.playing;
-      
-      if(playing) {
-        g = new Game(this, gis.hotseat, gis.room);
-        g.setup();
-        waitOnRoom = gis.room;
-      }
     }
   }
 }
