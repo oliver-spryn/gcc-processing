@@ -361,12 +361,12 @@ public class Multicaster {
 	
 	public void leaveRoom() throws MulticasterNotJoinedException {
 	//See if the user has already joined a room
-		if (this.room != null) {
+		if (this.room != null) {	
+		//Leave the room
+			this.transmit("room", "leave", this.room + ";" + this.uniqueID);
+			
 		//Remove the name of this room from memory
 			this.room = null;
-		
-		//Leave the room
-			this.transmit("room", "leave", room + ";" + this.uniqueID);
 			
 		//Turn off the receiver
 			this.thread.interrupt();
@@ -387,12 +387,12 @@ public class Multicaster {
 	
 	public void closeRoom() throws MulticasterNotJoinedException {
 	//See if the user has already joined a room
-		if (this.room != null) {
+		if (this.room != null) {		
+		//Leave the room
+			this.transmit("room", "close", this.room + ";" + this.uniqueID);
+			
 		//Remove the name of this room from memory
 			this.room = null;
-		
-		//Leave the room
-			this.transmit("room", "close", room + ";" + this.uniqueID);
 			
 		//Turn off the receiver
 			this.thread.interrupt();
