@@ -2,9 +2,6 @@ import picking.*;
 import edu.gcc.processing.net.*;
 import edu.gcc.processing.events.*;
 
-//TODO: put all of this in a PApplet, or otherwise abstract it from a GUI perspective
-// when this happens, code should be moved out of `prototype2' into its final location
-
 public class Game {
   private boolean hotseat;
   private String room;
@@ -31,21 +28,8 @@ public class Game {
   int dt;
   Multicaster mc;
   
-  //for debugging:
-  /*
-  int counter = 0;
-  void push_matrix() {
-    ++counter;
-    println(counter);
-    pushMatrix();
-  }
-  void pop_matrix() {
-    --counter;
-    popMatrix();
-  }
-  */
-  
   void setup() {
+    println("call setup");
     //size(1000, 600, P3D);
     oldTime = 0;
     

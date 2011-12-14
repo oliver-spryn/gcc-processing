@@ -19,8 +19,9 @@ void setup() {
   size(1000, 600, P3D);
   g = new Game(this, false, "Port Sigma");
   m = new Main_Menu();
+  println("call setup from outside");
   g.setup();
-  m.setup();
+  //m.setup();
 }
 
 void draw() {
