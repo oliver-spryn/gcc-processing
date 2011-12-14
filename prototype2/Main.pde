@@ -42,8 +42,9 @@ void draw() {
     
     if(needsWait && waitOnRoom != null) {
       while(mc.roomTotal(waitOnRoom) != 2) {
-        try { Thread.sleep(200); } catch(InterruptedException e) {}
+        try { Thread.sleep(500); } catch(InterruptedException e) {}
       }
+      waitOnRoom = null;
     }
     needsWait = true;
     
@@ -55,7 +56,6 @@ void draw() {
       willClose = true;
       
       g = null;
-      waitOnRoom = null;
       needsWait = false;
       m.setPlaying(playing);
     }
