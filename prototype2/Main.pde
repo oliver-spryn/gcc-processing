@@ -2,6 +2,7 @@
 Game g;
 Main_Menu m;
 boolean playing = true;
+GameInitializerStruct gis;
 
 public class GameInitializerStruct {
   public boolean playing;
@@ -17,11 +18,10 @@ public class GameInitializerStruct {
 
 void setup() {
   size(1000, 600, P3D);
-  g = new Game(this, false, "Port Sigma");
-  m = new Main_Menu();
-  println("call setup from outside");
-  g.setup();
+  //m = new Main_Menu();
   //m.setup();
+  g = new Game(this, false, "Port Sigma");
+  g.setup();
 }
 
 void draw() {
@@ -30,17 +30,22 @@ void draw() {
     
     if(!playing) {
       try { Thread.sleep(3000); } catch(InterruptedException e) {}
+      g = null;
     }
   } else {
-    //playing = m.draw();
-    background(0);
+    gis = m.draw();
+    playing = gis.playing;
+    
+    if(playing) {
+      g = new Game(this, gis.hotseat, gis.room);
+      g.setup();
+    }
   }
 }
 
 void keyPressed() {
-  if(key == ' ') {
+  if(playing && key == ' ') {
     g.stop();
-    //m.stop();
     exit();
   }
 }

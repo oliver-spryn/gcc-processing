@@ -57,6 +57,11 @@ public class Game {
           thisPlayerIdx = 1;
           otherPlayerIdx = 0;
         }
+        
+        players[thisPlayerIdx] = new TerminalPlayer(mc);
+        final NetworkPlayer np = new NetworkPlayer(mc);
+        players[otherPlayerIdx] = np;
+        
         mc.reciever.addEventListener(new PacketRecievedHandler() {
           public void userLeft() {
             println("userLeft()");
@@ -66,10 +71,11 @@ public class Game {
             println("roomClosed()");
             endPlay = true;
           }
+          public void packetRecieved(PacketRecieved e, ArrayList data) {
+            np.setMove(Integer.parseInt(data.get(1).toString()));
+            println("recieved packet");
+          }
         });
-        
-        players[thisPlayerIdx] = new TerminalPlayer(mc);
-        players[otherPlayerIdx] = new NetworkPlayer(mc);
       } catch(Exception e) {//FIXME: handle the exceptions individually
         println(e);
         throw new RuntimeException();
@@ -546,7 +552,9 @@ public class Game {
             needy.add(a);
         }
       }
-      Collections.shuffle(needy);
+      if(hotseat) {
+        Collections.shuffle(needy);
+      }
       
       boolean bondingOccured = true;
       while(bondingOccured) {

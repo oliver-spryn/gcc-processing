@@ -1,3 +1,4 @@
+
 class Main_Menu
 {
   private boolean playing;
@@ -42,7 +43,7 @@ class Main_Menu
     
   void setup()
   {
-    size(1000,600);
+    //size(1000,600);
     background(#00B9C6);
     
     
