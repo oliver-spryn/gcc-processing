@@ -25,11 +25,5 @@ public class Test extends PApplet {
 		} catch (MulticasterJoinException e) {
 			
 		}
-		
-		try {
-			multicast.closeRoom();
-		} catch (MulticasterNotJoinedException e) {
-			
-		}
 	}
 }
