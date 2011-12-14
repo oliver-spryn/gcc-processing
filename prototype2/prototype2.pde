@@ -51,12 +51,12 @@ public class Game {
       try {
         int thisPlayerIdx = 0;
         int otherPlayerIdx = 1;
-        if(mc.roomTotal(room) == 1) {
+        mc.joinRoom(room);
+        println("joinRoom()");
+        if(!mc.isPrimary()) {
           thisPlayerIdx = 1;
           otherPlayerIdx = 0;
         }
-        mc.joinRoom(room);
-        println("joinRoom()");
         mc.reciever.addEventListener(new PacketRecievedHandler() {
           public void userLeft() {
             println("userLeft()");
@@ -648,6 +648,7 @@ public class Game {
       multicaster.reciever.addEventListener(new PacketRecievedHandler() {
         public void packetRecieved(PacketRecieved e, ArrayList data) {
           setMove(Integer.parseInt(data.get(1).toString()));
+          println("recieved packet");
         }
       });
     }
