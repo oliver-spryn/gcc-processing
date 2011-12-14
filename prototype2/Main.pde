@@ -1,8 +1,11 @@
 
+import edu.gcc.processing.gui.*;
+
 Game g;
 Main_Menu m;
-boolean playing = true;
+boolean playing = false;
 GameInitializerStruct gis;
+boolean willClose = false;
 
 public class GameInitializerStruct {
   public boolean playing;
@@ -18,27 +21,40 @@ public class GameInitializerStruct {
 
 void setup() {
   size(1000, 600, P3D);
-  //m = new Main_Menu();
-  //m.setup();
-  g = new Game(this, false, "Port Sigma");
-  g.setup();
+  m = new Main_Menu();
+  m.setup();
+  //g = new Game(this, false, "Port Sigma");
+  //g.setup();
 }
 
 void draw() {
+  if(willClose) {
+    try { Thread.sleep(5000); } catch(InterruptedException e) {}
+    exit();
+  }
+  
   if(playing) {
     playing = g.draw();
     
     if(!playing) {
-      try { Thread.sleep(3000); } catch(InterruptedException e) {}
+      TabAlerts tab = new TabAlerts(this);
+      tab.message = "Game Over. Window will close.";
+      tab.build();
+      
+      willClose = true;
+      
       g = null;
+      m.setPlaying(playing);
     }
   } else {
     gis = m.draw();
-    playing = gis.playing;
-    
-    if(playing) {
-      g = new Game(this, gis.hotseat, gis.room);
-      g.setup();
+    if(gis != null) {
+      playing = gis.playing;
+      
+      if(playing) {
+        g = new Game(this, gis.hotseat, gis.room);
+        g.setup();
+      }
     }
   }
 }
@@ -51,8 +67,9 @@ void keyPressed() {
 }
 
 void mouseClicked() {
-  if(playing)
+  if(playing) 
     g.mouseClicked();
+  
 }
 
 void mousePressed() {
