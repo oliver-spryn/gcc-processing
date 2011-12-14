@@ -10,13 +10,13 @@ import edu.gcc.processing.events.PacketRecieved;
 import edu.gcc.processing.events.PacketRecievedHandler;
 import edu.gcc.processing.exceptions.multicaster.MulticasterJoinException;
 import edu.gcc.processing.exceptions.multicaster.MulticasterJoinedPreviouslyException;
+import edu.gcc.processing.exceptions.multicaster.MulticasterNotJoinedException;
 
 public class Test extends PApplet {
 	public void setup() {
 		size(640, 480);
 	    
 		Multicaster multicast = new Multicaster(this);
-		multicast.groupMax = 50;
 		
 		try {
 			multicast.joinRoom("Lego");
@@ -26,14 +26,10 @@ public class Test extends PApplet {
 			
 		}
 		
-		multicast.reciever.addEventListener(new PacketRecievedHandler() {
-			public void packetRecieved(PacketRecieved e, ArrayList data) {
-				new Message(data);
-			}
+		try {
+			multicast.closeRoom();
+		} catch (MulticasterNotJoinedException e) {
 			
-			public void userJoined(PacketRecieved e, ArrayList data) {
-				new Message(data);
-			}
-		});
+		}
 	}
 }
