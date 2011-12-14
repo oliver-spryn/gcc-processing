@@ -115,6 +115,7 @@ public class Game {
     lights();
     
     //why won't this work?
+    
     text("player " + turn + "'s turn", 20, 20, 200, 200);
     
     translate(width / 2, height / 2, -200);
