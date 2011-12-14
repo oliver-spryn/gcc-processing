@@ -64,6 +64,7 @@ public class Game {
         mc.reciever.addEventListener(new PacketRecievedHandler() {
           public void userLeft() {
             println("userLeft()");
+            endPlay = true;
           }
           public void roomClosed() {
             println("roomClosed()");
@@ -84,15 +85,11 @@ public class Game {
   
   boolean draw() {
     if(space.gameOver()) {
-      try {
-        println("leaveRoom()");
-        mc.leaveRoom();
-      } catch(Exception e) {//FIXME:
-        throw new RuntimeException();
+      if(players[turn] instanceof NetworkPlayer) {
+        endPlay = true;
       }
-      
-      return false;
     }
+    
     if(endPlay) {
       try {
         println("closeRoom()");
@@ -101,6 +98,8 @@ public class Game {
         throw new RuntimeException();
       }
       
+      return false;
+    } else if(space.gameOver()) {
       return false;
     }
     
