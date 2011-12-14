@@ -188,7 +188,7 @@ public class Game {
       println("closeRoom()");
       mc.closeRoom();
     } catch(Exception e) {//FIXME:
-      throw new RuntimeException();
+      //throw new RuntimeException();
     }
   }
   

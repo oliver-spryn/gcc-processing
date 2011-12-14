@@ -24,9 +24,12 @@ void draw() {
   }
 }
 
-void stop() {
-  g.stop();
-  //m.stop();
+void keyPressed() {
+  if(key == ' ') {
+    g.stop();
+    //m.stop();
+    exit();
+  }
 }
 
 void mouseClicked() {
