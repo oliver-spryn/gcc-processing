@@ -111,65 +111,18 @@ public class Game {
       turn = (turn + 1) % players.length;
     }
     
-    //FIXME: put lights in constant position relative to the camera
     lights();
-    
-    //why won't this work?
-    
-    text("player " + turn + "'s turn", 20, 20, 200, 200);
     
     translate(width / 2, height / 2, -200);
     rotateX(rotX);
     rotateY(rotY);
     
-    /*
-    float theta = (oldX2D + x2D) * 8 / cameraR; //approximation to account for scaling that looks reasonable
-    float phi = (oldY2D + y2D) * 8 / cameraR;
-    
-    cameraX = cameraR * sin(theta);
-    cameraY = cameraR * sin(phi);
-    float cameraZ = cameraR * cos(theta) * cos(phi);
-    float tmp = cameraR * cameraR - cameraX * cameraX - cameraY * cameraY;
-    int sign = tmp < 0 ? -1 : 1;
-    //float cameraZ = sqrt(abs(tmp)) * sign;
-    //println("y: " + cameraY + " z: " + cameraZ);
-    if(cameraZ < 0) {
-      cameraY = -cameraY;
-      cameraZ = -cameraZ;
-    }
-    if(cameraX < 0) {
-      cameraY = -cameraY;
-      cameraX = -cameraX;
-    }
-    //println(cameraZ);
-    camera(cameraX, cameraY, cameraZ, 0, 0, 0, 0, 1, 0);
-    //rotateX(rotX * PI / 180);
-    //rotateY(rotY * PI / 180);
-    */
-    
-    /*
-    float theta = x2D * 8 / cameraR; //approximation to account for scaling that looks reasonable
-    float phi = y2D * 8 / cameraR;
-    float oldTheta = oldX2D * 8 / cameraR;
-    float oldPhi = oldY2D * 8 / cameraR;
-    
-    //XXX: can we do this with custom rotation matrices?
-    rotateY(oldTheta);
-    rotateX(oldPhi);
-    PMatrix m;
-    pushMatrix();
-    resetMatrix();
-    rotateY(theta);
-    rotateX(phi);
-    m = getMatrix();
-    popMatrix();
-    applyMatrix(m);
-    */
-    
     dt = millis() - oldTime;
     
     space.simulate();
     space.draw();
+    
+    println("Player " + (turn + 1) + "'s turn");
     
     oldTime = millis();
     
