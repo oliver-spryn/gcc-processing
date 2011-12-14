@@ -52,6 +52,9 @@ class Main_Menu
     for(String st : stringTotals) {
       totals.add(Integer.parseInt(st));
     }
+    /*for(int i=0; i < 5; ++i) {
+      totals.add(2);
+    }*/
   }
   
   void keyPressed() {
