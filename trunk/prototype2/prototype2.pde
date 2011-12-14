@@ -91,11 +91,13 @@ public class Game {
     }
     
     if(endPlay) {
-      try {
-        println("closeRoom()");
-        mc.closeRoom();
-      } catch(Exception e) {//FIXME:
-        throw new RuntimeException();
+      if(!hotseat) {
+        try {
+          println("closeRoom()");
+          mc.closeRoom();
+        } catch(Exception e) {//FIXME:
+          throw new RuntimeException();
+        }
       }
       
       return false;
@@ -174,11 +176,13 @@ public class Game {
   }
   
   void stop() {
-    try {
-      println("closeRoom()");
-      mc.closeRoom();
-    } catch(Exception e) {//FIXME:
-      //throw new RuntimeException();
+    if(!hotseat) {
+      try {
+        println("closeRoom()");
+        mc.closeRoom();
+      } catch(Exception e) {//FIXME:
+        //throw new RuntimeException();
+      }
     }
   }
   
@@ -188,9 +192,13 @@ public class Game {
     
     int id = picker.get(mouseX, mouseY);
     
+    if(id != -1)
+      println(id);
+    
     if(id != -1 && players[turn] instanceof TerminalPlayer) {
       TerminalPlayer t = (TerminalPlayer)players[turn];
       t.setMove(id);
+      println("working this far");
     }
   }
   
