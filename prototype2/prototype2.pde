@@ -59,13 +59,11 @@ public class Game {
         }
         
         players[thisPlayerIdx] = new TerminalPlayer(mc);
-        final NetworkPlayer np = new NetworkPlayer(mc);
-        players[otherPlayerIdx] = np;
+        players[otherPlayerIdx] = new NetworkPlayer(mc);
         
         mc.reciever.addEventListener(new PacketRecievedHandler() {
           public void userLeft() {
             println("userLeft()");
-            endPlay = true;
           }
           public void roomClosed() {
             println("roomClosed()");
@@ -85,6 +83,16 @@ public class Game {
   }
   
   boolean draw() {
+    if(space.gameOver()) {
+      try {
+        println("leaveRoom()");
+        mc.leaveRoom();
+      } catch(Exception e) {//FIXME:
+        throw new RuntimeException();
+      }
+      
+      return false;
+    }
     if(endPlay) {
       try {
         println("closeRoom()");
@@ -162,10 +170,6 @@ public class Game {
     space.draw();
     
     oldTime = millis();
-    
-    if(space.gameOver()) {
-      endPlay = true;
-    }
       
     return true;
   }
@@ -430,7 +434,7 @@ public class Game {
     public void buildBuckyball() {
       //clear(); // ?
       
-      final float R = 60;
+      final float R = 40;
       
       for(PVector v : Buckyball.vertices) {
         PVector w = v.get();
