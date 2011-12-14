@@ -27,6 +27,10 @@ void setup() {
   //g.setup();
 }
 
+Multicaster mc = new Multicaster(this);
+String waitOnRoom = null;
+boolean needsWait = false;
+
 void draw() {
   if(willClose) {
     try { Thread.sleep(5000); } catch(InterruptedException e) {}
@@ -36,6 +40,13 @@ void draw() {
   if(playing) {
     playing = g.draw();
     
+    if(needsWait && waitOnRoom != null) {
+      while(mc.roomTotal(waitOnRoom) != 2) {
+        try { Thread.sleep(200); } catch(InterruptedException e) {}
+      }
+    }
+    needsWait = true;
+    
     if(!playing) {
       TabAlerts tab = new TabAlerts(this);
       tab.message = "Game Over. Window will close.";
@@ -44,6 +55,8 @@ void draw() {
       willClose = true;
       
       g = null;
+      waitOnRoom = null;
+      needsWait = false;
       m.setPlaying(playing);
     }
   } else {
@@ -54,6 +67,7 @@ void draw() {
       if(playing) {
         g = new Game(this, gis.hotseat, gis.room);
         g.setup();
+        waitOnRoom = gis.room;
       }
     }
   }
