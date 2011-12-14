@@ -1,14 +1,26 @@
 
 Game g;
-//Main_Menu m;
+Main_Menu m;
 boolean playing = true;
+
+public class GameInitializerStruct {
+  public boolean playing;
+  public boolean hotseat;
+  public String room;
+  
+  public GameInitializerStruct(boolean playing_, boolean hotseat_, String room_) {
+    playing = playing_;
+    hotseat = hotseat_;
+    room = room_;
+  }
+}
 
 void setup() {
   size(1000, 600, P3D);
   g = new Game(this, false, "Port Sigma");
-  //m = new Main_Menu();
+  m = new Main_Menu();
   g.setup();
-  //m.setup();
+  m.setup();
 }
 
 void draw() {
