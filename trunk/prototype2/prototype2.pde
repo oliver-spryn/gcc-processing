@@ -71,10 +71,6 @@ public class Game {
             println("roomClosed()");
             endPlay = true;
           }
-          public void packetRecieved(PacketRecieved e, ArrayList data) {
-            np.setMove(Integer.parseInt(data.get(1).toString()));
-            println("recieved packet");
-          }
         });
       } catch(Exception e) {//FIXME: handle the exceptions individually
         println(e);
@@ -654,7 +650,10 @@ public class Game {
       super(multicaster);
       multicaster.reciever.addEventListener(new PacketRecievedHandler() {
         public void packetRecieved(PacketRecieved e, ArrayList data) {
-          setMove(Integer.parseInt(data.get(1).toString()));
+          try {
+            int moveIdx = Integer.parseInt(data.get(1).toString());
+            setMove(moveIdx);
+          } catch(NumberFormatException e) {} //ignore
           println("recieved packet");
         }
       });
