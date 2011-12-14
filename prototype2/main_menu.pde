@@ -158,6 +158,9 @@ class Main_Menu
     
     return gis;
   }
-
+  
+  void stop() {
+    
+  }
 }
 
