@@ -441,7 +441,7 @@ public class Game {
     public void buildBuckyball() {
       //clear(); // ?
       
-      final float R = 40;
+      final float R = 50;
       
       for(PVector v : Buckyball.vertices) {
         PVector w = v.get();

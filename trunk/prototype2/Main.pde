@@ -21,7 +21,7 @@ public class GameInitializerStruct {
 
 void setup() {
   size(1000, 600, P3D);
-  m = new Main_Menu();
+  m = new Main_Menu(this);
   m.setup();
   //g = new Game(this, false, "Port Sigma");
   //g.setup();
@@ -60,6 +60,7 @@ void draw() {
 }
 
 void keyPressed() {
+  m.keyPressed();
   if(playing && key == ' ') {
     g.stop();
     exit();
