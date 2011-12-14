@@ -504,7 +504,6 @@ public class Game {
           doneMoving = false;
       }
       
-      
       if(!doneMoving) {
         //if two atoms collide, game over
         for(Atom a : atoms) {
