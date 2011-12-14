@@ -19,11 +19,17 @@ public class Test extends PApplet {
 		Multicaster multicast = new Multicaster(this);
 		
 		try {
-			multicast.joinRoom("Lego");
+			multicast.joinRoom("Tardis");
 		} catch (MulticasterJoinedPreviouslyException e) {
 			
 		} catch (MulticasterJoinException e) {
 			
 		}
+		
+		multicast.reciever.addEventListener(new PacketRecievedHandler() {
+			public void packetRecieved(PacketRecieved e, ArrayList data) {
+				new Message(data.get(1));
+			}
+		});
 	}
 }

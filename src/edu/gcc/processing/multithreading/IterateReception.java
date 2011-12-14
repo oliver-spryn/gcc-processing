@@ -72,8 +72,9 @@ public class IterateReception extends Multicaster implements Runnable {
 					while(e.hasMoreElements()) {
 						IPacketRecievedListener l = (IPacketRecievedListener) e.nextElement();
 						
-						if (packetData.get(0) != null && packetData.get(1) != null && !packetData.get(0).equals(super.lastPacket.get(0)) && !packetData.get(1).equals(super.lastPacket.get(1))) {
+						if (packetData.get(0) != null && packetData.get(1) != null && !packetData.get(1).equals(super.lastPacket.get(1))) {
 							super.lastPacket = packetData;
+							
 							
 							l.packetRecieved(event, super.lastPacket);
 							
