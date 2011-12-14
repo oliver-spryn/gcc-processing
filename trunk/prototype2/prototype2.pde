@@ -85,7 +85,7 @@ public class Game {
   
   boolean draw() {
     if(space.gameOver()) {
-      if(players[turn] instanceof NetworkPlayer) {
+      if(players[turn] instanceof TerminalPlayer) {
         endPlay = true;
       }
     }
