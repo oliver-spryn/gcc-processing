@@ -29,7 +29,6 @@ void setup() {
 
 Multicaster mc = new Multicaster(this);
 boolean isSetup = false;
-boolean isReady = false;
 
 void draw() {
   if(willClose) {
@@ -38,20 +37,6 @@ void draw() {
   }
   
   if(playing) {
-    if(!isSetup) {
-      if(!isReady) {
-        g = new Game(this, gis.hotseat, gis.room);
-        g.setup();
-        isReady = true;
-      }
-      
-      if(mc.roomTotal(gis.room) != 2) {
-        try { Thread.sleep(200); } catch(InterruptedException ex) {}
-        return;
-      }
-      isSetup = true;
-    }
-    
     playing = g.draw();
     
     if(!playing) {
@@ -62,21 +47,39 @@ void draw() {
       willClose = true;
       
       g = null;
-      isSetup = isReady = false;
+      isSetup = false;
       m.setPlaying(playing);
     }
   } else {
-    gis = m.draw();
+    if(!isSetup) {
+      gis = m.draw();
+    }
+    
     if(gis != null) {
-      playing = gis.playing;
+      if(playing != gis.playing) {
+        if(!isSetup) {
+          g = new Game(this, gis.hotseat, gis.room);
+          g.setup();
+          isSetup = true;
+        }
+        
+        if(mc.roomTotal(gis.room) != 2) {
+          try { Thread.sleep(200); } catch(InterruptedException ex) {}
+          return;
+        }
+        
+        playing = gis.playing;
+      }
     }
   }
 }
 
 void keyPressed() {
   m.keyPressed();
-  if(playing && key == ' ') {
-    g.stop();
+  if(key == ' ') {
+    if(isSetup)
+      g.stop();
+    m.stop();
     exit();
   }
 }
