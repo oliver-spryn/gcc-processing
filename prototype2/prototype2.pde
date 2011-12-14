@@ -653,7 +653,7 @@ public class Game {
           try {
             int moveIdx = Integer.parseInt(data.get(1).toString());
             setMove(moveIdx);
-          } catch(NumberFormatException e) {} //ignore
+          } catch(NumberFormatException ex) {} //ignore
           println("recieved packet");
         }
       });
