@@ -63,9 +63,11 @@ void draw() {
           isSetup = true;
         }
         
-        if(mc.roomTotal(gis.room) != 2) {
-          try { Thread.sleep(200); } catch(InterruptedException ex) {}
-          return;
+        if(!gis.hotseat) {
+          if(mc.roomTotal(gis.room) != 2) {
+            try { Thread.sleep(200); } catch(InterruptedException ex) {}
+            return;
+          }
         }
         
         playing = gis.playing;
